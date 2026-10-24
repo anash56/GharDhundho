@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { auth } from "../middleware/auth.js";
 import { allow } from "../middleware/role.js";
-import { listingUpload } from "../middleware/upload.js";
+import {
+  listingUpload,
+  validateUploadedImages,
+} from "../middleware/upload.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as controller from "../controllers/listingController.js";
 
@@ -13,6 +16,7 @@ router.post(
   auth,
   allow("owner"),
   listingUpload.array("images", 6),
+  validateUploadedImages,
   asyncHandler(controller.create),
 );
 router.get("/:id", asyncHandler(controller.detail));
@@ -21,6 +25,7 @@ router.put(
   auth,
   allow("owner"),
   listingUpload.array("images", 6),
+  validateUploadedImages,
   asyncHandler(controller.update),
 );
 router.delete("/:id", auth, allow("owner", "admin"), asyncHandler(controller.remove));

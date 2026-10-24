@@ -2,25 +2,51 @@ import { Listing, Enquiry, SavedListing } from "../models/index.js";
 import cloudinary from "../config/cloudinary.js";
 import { buildListingQuery } from "../utils/listingQuery.js";
 import ApiError from "../utils/ApiError.js";
-import { validateNewListing } from "../validators/listingValidator.js";
+import {
+  validateNewListing,
+  validateListingUpdates,
+} from "../validators/listingValidator.js";
 
 async function uploadImages(files = []) {
-  if (!process.env.CLOUDINARY_CLOUD_NAME) return [];
-  return Promise.all(
-    files.map(
-      (file) =>
-        new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: "ghardhundho" },
-            (error, result) => {
-              if (error) return reject(error);
-              resolve({ url: result.secure_url, publicId: result.public_id });
-            },
-          );
-          stream.end(file.buffer);
-        }),
-    ),
-  );
+  if (!files.length) return [];
+  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    throw new ApiError(503, "Image uploads are not configured on this server.");
+  }
+  const uploaded = [];
+  try {
+    for (const file of files) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "ghardhundho", resource_type: "image" },
+          (error, uploadResult) => {
+            if (error) return reject(error);
+            resolve(uploadResult);
+          },
+        );
+        stream.end(file.buffer);
+      });
+      uploaded.push({ url: result.secure_url, publicId: result.public_id });
+    }
+    return uploaded;
+  } catch {
+    await Promise.all(
+      uploaded.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+    );
+    throw new ApiError(502, "One or more images could not be uploaded. Please try again.");
+  }
+}
+
+function normalizeAmenities(value) {
+  if (Array.isArray(value)) return value.map((item) => item.trim()).filter(Boolean);
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeBoolean(value) {
+  if (value === undefined) return undefined;
+  return value === true || value === "true";
 }
 
 /** Search available listings and return the existing paginated result shape. */
@@ -51,69 +77,92 @@ export function findOwnerListings(ownerId) {
 /** Validate and persist a new owner listing and its uploaded images. */
 export async function createListing(ownerId, body, files) {
   validateNewListing(body);
-  return Listing.create({
-    ...body,
-    owner: ownerId,
-    rent: Number(body.rent),
-    deposit: Number(body.deposit) || 0,
-    amenities: Array.isArray(body.amenities)
-      ? body.amenities
-      : String(body.amenities || "")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-    images: await uploadImages(files),
-    isAvailable: body.isAvailable !== "false",
-  });
+  const images = await uploadImages(files || []);
+  try {
+    return await Listing.create({
+      owner: ownerId,
+      title: body.title.trim(),
+      description: body.description.trim(),
+      city: body.city.trim(),
+      locality: body.locality.trim(),
+      ...(body.address ? { address: body.address.trim() } : {}),
+      propertyType: body.propertyType,
+      rent: Number(body.rent),
+      deposit: body.deposit === undefined || body.deposit === "" ? 0 : Number(body.deposit),
+      availableFor: body.availableFor || "anyone",
+      furnishing: body.furnishing || "unfurnished",
+      amenities: normalizeAmenities(body.amenities),
+      images,
+      isAvailable: normalizeBoolean(body.isAvailable) ?? true,
+    });
+  } catch (error) {
+    await Promise.all(
+      images.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+    );
+    throw error;
+  }
 }
 
-/** Apply listing edits while enforcing owner ownership. */
+/** Apply only validated, explicitly permitted edits while enforcing ownership. */
 export async function updateListing(id, ownerId, body, files) {
+  validateListingUpdates(body);
   const listing = await Listing.findById(id);
   if (!listing) throw new ApiError(404, "Listing not found");
   if (String(listing.owner) !== String(ownerId)) {
     throw new ApiError(403, "You do not have permission to update this listing");
   }
-  const updates = { ...body };
-  delete updates.removedImages;
-  for (const key of ["rent", "deposit"])
-    if (updates[key] !== undefined) updates[key] = Number(updates[key]);
-  if (updates.amenities !== undefined) {
-    updates.amenities = Array.isArray(updates.amenities)
-      ? updates.amenities
-      : updates.amenities
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-  }
-  if (updates.isAvailable !== undefined)
-    updates.isAvailable = updates.isAvailable === "true";
+
   let removedImages = [];
-  if (body.removedImages) {
-    try {
-      removedImages = JSON.parse(body.removedImages);
-      if (!Array.isArray(removedImages)) throw new Error("Expected an image URL list");
-    } catch {
-      throw new ApiError(400, "Invalid removed image list");
-    }
+  if (body.removedImages !== undefined && body.removedImages !== "") {
+    removedImages =
+      typeof body.removedImages === "string"
+        ? JSON.parse(body.removedImages)
+        : body.removedImages;
   }
-  const retainedImages = listing.images.filter(
-    (image) => !removedImages.includes(image.url),
-  );
-  if (retainedImages.length + (files?.length || 0) > 6)
+  const removed = listing.images.filter((image) => removedImages.includes(image.url));
+  const retainedImages = listing.images.filter((image) => !removedImages.includes(image.url));
+  if (retainedImages.length + (files?.length || 0) > 6) {
     throw new ApiError(400, "You can add up to 6 images in total.");
-  if (removedImages.length) {
-    const removed = listing.images.filter((image) => removedImages.includes(image.url));
-    await Promise.all(
-      removed
-        .filter((image) => image.publicId)
-        .map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => {})),
-    );
   }
-  if (body.removedImages !== undefined || files?.length)
-    updates.images = [...retainedImages, ...(await uploadImages(files))];
-  Object.assign(listing, updates);
-  await listing.save();
+
+  const newImages = await uploadImages(files || []);
+  const updates = {};
+  for (const field of [
+    "title",
+    "description",
+    "city",
+    "locality",
+    "address",
+    "propertyType",
+    "availableFor",
+    "furnishing",
+  ]) {
+    if (body[field] !== undefined) updates[field] = body[field].trim();
+  }
+  if (body.address === "") updates.address = undefined;
+  if (body.rent !== undefined) updates.rent = Number(body.rent);
+  if (body.deposit !== undefined) updates.deposit = Number(body.deposit);
+  if (body.amenities !== undefined) updates.amenities = normalizeAmenities(body.amenities);
+  if (body.isAvailable !== undefined) updates.isAvailable = normalizeBoolean(body.isAvailable);
+  if (body.removedImages !== undefined || (files?.length || 0) > 0) {
+    updates.images = [...retainedImages, ...newImages];
+  }
+
+  try {
+    Object.assign(listing, updates);
+    await listing.save();
+  } catch (error) {
+    await Promise.all(
+      newImages.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+    );
+    throw error;
+  }
+
+  await Promise.all(
+    removed
+      .filter((image) => image.publicId)
+      .map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+  );
   return listing;
 }
 
@@ -128,7 +177,7 @@ export async function deleteListing(id, user) {
     throw new ApiError(404, "Listing not found");
   }
   for (const image of listing.images)
-    if (image.publicId) await cloudinary.uploader.destroy(image.publicId).catch(() => {});
+    if (image.publicId) await cloudinary.uploader.destroy(image.publicId).catch(() => { });
   await Promise.all([
     listing.deleteOne(),
     Enquiry.deleteMany({ listing: listing._id }),
