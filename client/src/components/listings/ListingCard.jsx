@@ -1,17 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, MapPin } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useSaved } from "@/hooks/useSaved.js";
 import { imgFallback } from "@/utils/constants.js";
+
 function ListingCard({ item, saved = false, onSavedChange }) {
   const { user, notify } = useAuth();
   const { saveListing, removeSavedListing } = useSaved();
   const [isSaved, setIsSaved] = useState(saved);
-  async function save(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!user) return notify("Sign in as a seeker to save homes");
+
+  useEffect(() => {
+    setIsSaved(saved);
+  }, [saved]);
+
+  async function save(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (user?.role !== "seeker") return notify("Sign in as a seeker to save homes");
     try {
       if (isSaved) {
         await removeSavedListing(item._id);
@@ -24,10 +30,11 @@ function ListingCard({ item, saved = false, onSavedChange }) {
         onSavedChange?.(true);
         notify("Saved to your list");
       }
-    } catch (e) {
-      notify(e.response?.data?.message || "Could not save this home");
+    } catch (error) {
+      notify(error.response?.data?.message || "Could not save this home");
     }
   }
+
   return (
     <article className="listing-card">
       <div className="card-image">
@@ -35,11 +42,13 @@ function ListingCard({ item, saved = false, onSavedChange }) {
           <img
             loading="lazy"
             src={item.images?.[0]?.url || imgFallback}
-            onError={(e) => (e.currentTarget.src = imgFallback)}
+            alt={`Photo of ${item.title}`}
+            onError={(event) => { event.currentTarget.src = imgFallback; }}
           />
         </Link>
         <span className="type-pill">{item.propertyType}</span>
         <button
+          type="button"
           className={`heart${isSaved ? " is-saved" : ""}`}
           aria-label={`${isSaved ? "Unsave" : "Save"} ${item.title}`}
           aria-pressed={isSaved}

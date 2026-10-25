@@ -30,7 +30,7 @@ async function uploadImages(files = []) {
     return uploaded;
   } catch {
     await Promise.all(
-      uploaded.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+      uploaded.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => {})),
     );
     throw new ApiError(502, "One or more images could not be uploaded. Please try again.");
   }
@@ -97,7 +97,7 @@ export async function createListing(ownerId, body, files) {
     });
   } catch (error) {
     await Promise.all(
-      images.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+      images.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => {})),
     );
     throw error;
   }
@@ -153,16 +153,20 @@ export async function updateListing(id, ownerId, body, files) {
     await listing.save();
   } catch (error) {
     await Promise.all(
-      newImages.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+      newImages.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => {})),
     );
     throw error;
   }
 
-  await Promise.all(
+  const cleanupResults = await Promise.allSettled(
     removed
       .filter((image) => image.publicId)
-      .map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => { })),
+      .map((image) => cloudinary.uploader.destroy(image.publicId)),
   );
+  const failedCleanupCount = cleanupResults.filter((result) => result.status === "rejected").length;
+  if (failedCleanupCount > 0) {
+    console.error(`Failed to delete ${failedCleanupCount} removed Cloudinary image(s).`);
+  }
   return listing;
 }
 
@@ -176,11 +180,22 @@ export async function deleteListing(id, user) {
     }
     throw new ApiError(404, "Listing not found");
   }
-  for (const image of listing.images)
-    if (image.publicId) await cloudinary.uploader.destroy(image.publicId).catch(() => { });
-  await Promise.all([
-    listing.deleteOne(),
-    Enquiry.deleteMany({ listing: listing._id }),
-    SavedListing.deleteMany({ listing: listing._id }),
-  ]);
+
+  // Delete dependent records first so a failure does not remove the listing itself.
+  await Enquiry.deleteMany({ listing: listing._id });
+  await SavedListing.deleteMany({ listing: listing._id });
+  await listing.deleteOne();
+
+  // Cloudinary cleanup begins only after database deletion succeeds.
+  const cleanupResults = await Promise.allSettled(
+    listing.images
+      .filter((image) => image.publicId)
+      .map((image) => cloudinary.uploader.destroy(image.publicId)),
+  );
+  const failedCleanupCount = cleanupResults.filter((result) => result.status === "rejected").length;
+  if (failedCleanupCount > 0) {
+    console.error(
+      `Failed to delete ${failedCleanupCount} Cloudinary image(s) after listing deletion.`,
+    );
+  }
 }

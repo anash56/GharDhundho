@@ -47,14 +47,21 @@ function ListingForm({ initial, onSubmit, onCancel }) {
     const formData = new FormData(event.currentTarget);
     formData.delete("images");
     images.forEach((file) => formData.append("images", file));
-    formData.set(
-      "removedImages",
-      JSON.stringify(
-        (initial?.images || [])
-          .filter((image) => !keptImages.includes(image))
-          .map((image) => image.url),
-      ),
-    );
+
+    // `removedImages` is only accepted by the update validator, not create.
+    if (initial) {
+      formData.set(
+        "removedImages",
+        JSON.stringify(
+          (initial.images || [])
+            .filter((image) => !keptImages.includes(image))
+            .map((image) => image.url),
+        ),
+      );
+    } else {
+      formData.delete("removedImages");
+    }
+
     await onSubmit(formData);
   }
 
@@ -76,63 +83,44 @@ function ListingForm({ initial, onSubmit, onCancel }) {
         </label>
         <label>
           Monthly rent (₹)
-          <input
-            name="rent"
-            type="number"
-            min="0"
-            required
-            defaultValue={initial?.rent ?? ""}
-          />
+          <input name="rent" type="number" min="0" required defaultValue={initial?.rent ?? ""} />
         </label>
         <label>
           Deposit (₹)
-          <input
-            name="deposit"
-            type="number"
-            min="0"
-            defaultValue={initial?.deposit ?? ""}
-          />
+          <input name="deposit" type="number" min="0" defaultValue={initial?.deposit ?? ""} />
         </label>
         <label>
           Home type
           <select name="propertyType" defaultValue={initial?.propertyType || "room"}>
-            <option>room</option>
-            <option>flat</option>
-            <option>pg</option>
+            <option value="room">room</option>
+            <option value="flat">flat</option>
+            <option value="pg">pg</option>
           </select>
         </label>
         <label>
           Available for
           <select name="availableFor" defaultValue={initial?.availableFor || "anyone"}>
-            <option>anyone</option>
-            <option>boys</option>
-            <option>girls</option>
-            <option>family</option>
+            <option value="anyone">anyone</option>
+            <option value="boys">boys</option>
+            <option value="girls">girls</option>
+            <option value="family">family</option>
           </select>
         </label>
         <label>
           Furnishing
           <select name="furnishing" defaultValue={initial?.furnishing || "furnished"}>
-            <option>furnished</option>
-            <option>semi</option>
-            <option>unfurnished</option>
+            <option value="furnished">furnished</option>
+            <option value="semi">semi</option>
+            <option value="unfurnished">unfurnished</option>
           </select>
         </label>
         <label className="wide">
           Description
-          <textarea
-            name="description"
-            required
-            defaultValue={initial?.description || "A comfortable home for testing."}
-          />
+          <textarea name="description" required defaultValue={initial?.description || "A comfortable home for testing."} />
         </label>
         <label className="wide">
           Amenities (comma separated)
-          <input
-            name="amenities"
-            placeholder="wifi, parking, laundry"
-            defaultValue={(initial?.amenities || []).join(", ")}
-          />
+          <input name="amenities" placeholder="wifi, parking, laundry" defaultValue={(initial?.amenities || []).join(", ")} />
         </label>
         <label className="wide">
           Photos (up to 6)
@@ -144,27 +132,20 @@ function ListingForm({ initial, onSubmit, onCancel }) {
             onChange={selectImages}
           />
           <small>
-            JPEG, PNG, WEBP, or GIF · max 5 MB each · {keptImages.length + images.length}/
-            {MAX_IMAGES}
+            JPEG, PNG, WEBP, or GIF · max 5 MB each · {keptImages.length + images.length}/{MAX_IMAGES}
           </small>
         </label>
       </div>
-      {error && (
-        <p role="alert" className="upload-error">
-          {error}
-        </p>
-      )}
+      {error && <p role="alert" className="upload-error">{error}</p>}
       {(keptImages.length > 0 || previews.length > 0) && (
         <div className="image-previews" aria-label="Image previews">
           {keptImages.map((image) => (
             <div className="image-preview" key={image.url}>
-              <img src={image.url} alt="Existing listing preview" />
+              <img src={image.url} alt={`Existing photo for ${initial?.title || "listing"}`} />
               <button
                 type="button"
                 aria-label="Remove existing image"
-                onClick={() =>
-                  setKeptImages((current) => current.filter((entry) => entry !== image))
-                }
+                onClick={() => setKeptImages((current) => current.filter((entry) => entry !== image))}
               >
                 <X size={15} />
               </button>
@@ -173,21 +154,15 @@ function ListingForm({ initial, onSubmit, onCancel }) {
           {previews.map(({ file, url }) => (
             <div className="image-preview" key={`${file.name}-${file.lastModified}`}>
               <img src={url} alt={`Preview ${file.name}`} />
-              <button
-                type="button"
-                aria-label={`Remove ${file.name}`}
-                onClick={() => removeNewImage(file)}
-              >
+              <button type="button" aria-label={`Remove ${file.name}`} onClick={() => removeNewImage(file)}>
                 <X size={15} />
               </button>
             </div>
           ))}
         </div>
       )}
-      <button className="button" type="submit">
-        {initial ? "Save changes" : "Publish listing"}
-      </button>
-      {initial && (
+      <button className="button" type="submit">{initial ? "Save changes" : "Publish listing"}</button>
+      {onCancel && (
         <button className="text-button form-cancel" type="button" onClick={onCancel}>
           Cancel
         </button>
