@@ -3,3 +3,9 @@ node_modules
 server/.env
 client/.env
 dist
+coverage
+**/coverage/
+.vitest/
+/server/test/
+/client/src/__tests__/
+/client/src/test/

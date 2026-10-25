@@ -1,16 +1,41 @@
-import rateLimit from "express-rate-limit";
+
+import rateLimit, { MemoryStore } from "express-rate-limit";
 import { apiError } from "../utils/ApiResponse.js";
 
+// Keep references to the stores so tests can reset their counters.
+const limiterStores = [];
+
 function createLimiter({ windowMs, limit, message }) {
-  return rateLimit({
+  const store = new MemoryStore();
+
+  const limiter = rateLimit({
     windowMs,
     limit,
+    store,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_req, res) => {
       res.status(429).json(apiError(message));
     },
   });
+
+  limiterStores.push(store);
+
+  return limiter;
+}
+
+/**
+ * Reset rate-limit counters between tests only.
+ * This does not alter the configured rate limits.
+ */
+export async function resetRateLimitersForTests() {
+  if (process.env.NODE_ENV !== "test") {
+    throw new Error("Rate-limit resets are only allowed in test mode.");
+  }
+
+  await Promise.all(
+    limiterStores.map((store) => store.resetAll()),
+  );
 }
 
 export const authRateLimiter = createLimiter({
