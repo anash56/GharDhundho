@@ -1,5 +1,6 @@
 import { Listing, Enquiry, SavedListing } from "../models/index.js";
 import cloudinary from "../config/cloudinary.js";
+import { env } from "../config/env.js";
 import { buildListingQuery } from "../utils/listingQuery.js";
 import ApiError from "../utils/ApiError.js";
 import {
@@ -7,33 +8,49 @@ import {
   validateListingUpdates,
 } from "../validators/listingValidator.js";
 
+async function uploadSingleImage(file) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "ghardhundho", resource_type: "image" },
+      (error, uploadResult) => {
+        if (error) return reject(error);
+        if (!uploadResult?.secure_url || !uploadResult?.public_id) {
+          return reject(new Error("Cloudinary returned incomplete upload metadata."));
+        }
+        resolve({ url: uploadResult.secure_url, publicId: uploadResult.public_id });
+      },
+    );
+    stream.end(file.buffer);
+  });
+}
+
+/** Upload up to six images concurrently; clean up every successful upload if any fail. */
 async function uploadImages(files = []) {
   if (!files.length) return [];
-  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+  if (!env.cloudinaryCloudName) {
     throw new ApiError(503, "Image uploads are not configured on this server.");
   }
-  const uploaded = [];
-  try {
-    for (const file of files) {
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "ghardhundho", resource_type: "image" },
-          (error, uploadResult) => {
-            if (error) return reject(error);
-            resolve(uploadResult);
-          },
-        );
-        stream.end(file.buffer);
-      });
-      uploaded.push({ url: result.secure_url, publicId: result.public_id });
-    }
-    return uploaded;
-  } catch {
-    await Promise.all(
-      uploaded.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => {})),
+
+  const results = await Promise.allSettled(files.map((file) => uploadSingleImage(file)));
+  const uploaded = results
+    .filter((result) => result.status === "fulfilled")
+    .map((result) => result.value);
+  const failedUploads = results.filter((result) => result.status === "rejected").length;
+
+  if (failedUploads > 0) {
+    const cleanupResults = await Promise.allSettled(
+      uploaded.map((image) => cloudinary.uploader.destroy(image.publicId)),
     );
+    const cleanupFailures = cleanupResults.filter((result) => result.status === "rejected").length;
+
+    console.error("[cloudinary-upload]", {
+      failedUploads,
+      cleanupFailures,
+    });
     throw new ApiError(502, "One or more images could not be uploaded. Please try again.");
   }
+
+  return uploaded;
 }
 
 function normalizeAmenities(value) {
@@ -49,12 +66,13 @@ function normalizeBoolean(value) {
   return value === true || value === "true";
 }
 
-/** Search available listings and return the existing paginated result shape. */
-export async function findListings(query) {
+/** Search available listings; phone is included only for authenticated requests. */
+export async function findListings(query, { includeOwnerPhone = false } = {}) {
   const { filter, sortOrder, currentPage, pageSize } = buildListingQuery(query);
+  const ownerFields = includeOwnerPhone ? "name isVerified phone" : "name isVerified";
   const [items, total] = await Promise.all([
     Listing.find(filter)
-      .populate("owner", "name isVerified phone")
+      .populate("owner", ownerFields)
       .sort(sortOrder)
       .skip((currentPage - 1) * pageSize)
       .limit(pageSize),
@@ -63,8 +81,9 @@ export async function findListings(query) {
   return { items, total, page: currentPage, pages: Math.ceil(total / pageSize) };
 }
 
-export async function findListingById(id) {
-  const listing = await Listing.findById(id).populate("owner", "name phone isVerified");
+export async function findListingById(id, { includeOwnerPhone = false } = {}) {
+  const ownerFields = includeOwnerPhone ? "name phone isVerified" : "name isVerified";
+  const listing = await Listing.findById(id).populate("owner", ownerFields);
   if (!listing) throw new ApiError(404, "Listing not found");
   return listing;
 }
@@ -96,8 +115,8 @@ export async function createListing(ownerId, body, files) {
       isAvailable: normalizeBoolean(body.isAvailable) ?? true,
     });
   } catch (error) {
-    await Promise.all(
-      images.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => {})),
+    await Promise.allSettled(
+      images.map((image) => cloudinary.uploader.destroy(image.publicId)),
     );
     throw error;
   }
@@ -152,8 +171,8 @@ export async function updateListing(id, ownerId, body, files) {
     Object.assign(listing, updates);
     await listing.save();
   } catch (error) {
-    await Promise.all(
-      newImages.map((image) => cloudinary.uploader.destroy(image.publicId).catch(() => {})),
+    await Promise.allSettled(
+      newImages.map((image) => cloudinary.uploader.destroy(image.publicId)),
     );
     throw error;
   }
@@ -165,8 +184,9 @@ export async function updateListing(id, ownerId, body, files) {
   );
   const failedCleanupCount = cleanupResults.filter((result) => result.status === "rejected").length;
   if (failedCleanupCount > 0) {
-    console.error(`Failed to delete ${failedCleanupCount} removed Cloudinary image(s).`);
+    console.error("[cloudinary-cleanup]", { failedCleanupCount });
   }
+
   return listing;
 }
 
@@ -181,12 +201,10 @@ export async function deleteListing(id, user) {
     throw new ApiError(404, "Listing not found");
   }
 
-  // Delete dependent records first so a failure does not remove the listing itself.
   await Enquiry.deleteMany({ listing: listing._id });
   await SavedListing.deleteMany({ listing: listing._id });
   await listing.deleteOne();
 
-  // Cloudinary cleanup begins only after database deletion succeeds.
   const cleanupResults = await Promise.allSettled(
     listing.images
       .filter((image) => image.publicId)
@@ -194,8 +212,6 @@ export async function deleteListing(id, user) {
   );
   const failedCleanupCount = cleanupResults.filter((result) => result.status === "rejected").length;
   if (failedCleanupCount > 0) {
-    console.error(
-      `Failed to delete ${failedCleanupCount} Cloudinary image(s) after listing deletion.`,
-    );
+    console.error("[cloudinary-cleanup]", { failedCleanupCount });
   }
 }

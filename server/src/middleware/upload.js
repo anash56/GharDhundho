@@ -1,8 +1,8 @@
-
 import multer from "multer";
 import ApiError from "../utils/ApiError.js";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILES = 6;
 
 const ALLOWED_IMAGES = new Set([
   "image/jpeg",
@@ -28,10 +28,7 @@ function hasImageSignature(buffer, mimetype) {
       );
 
     case "image/png":
-      return (
-        buffer.length >= PNG_SIGNATURE.length &&
-        buffer.subarray(0, 8).equals(PNG_SIGNATURE)
-      );
+      return buffer.length >= PNG_SIGNATURE.length && buffer.subarray(0, 8).equals(PNG_SIGNATURE);
 
     case "image/gif": {
       if (buffer.length < 6) return false;
@@ -56,19 +53,17 @@ export function validateImageFiles(files = []) {
     throw new ApiError(400, "Invalid uploaded image list.");
   }
 
+  if (files.length > MAX_FILES) {
+    throw new ApiError(400, "You can add up to 6 images in total.");
+  }
+
   for (const file of files) {
     if (!ALLOWED_IMAGES.has(file.mimetype)) {
-      throw new ApiError(
-        400,
-        "Choose a JPEG, PNG, WEBP, or GIF image.",
-      );
+      throw new ApiError(400, "Choose a JPEG, PNG, WEBP, or GIF image.");
     }
 
     if (!hasImageSignature(file.buffer, file.mimetype)) {
-      throw new ApiError(
-        400,
-        "An uploaded file does not match its declared image type.",
-      );
+      throw new ApiError(400, "An uploaded file does not match its declared image type.");
     }
   }
 
@@ -88,15 +83,18 @@ export const listingUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: MAX_FILE_SIZE,
-    files: 6,
+    files: MAX_FILES,
+    fields: 32,
+    fieldSize: 16 * 1024,
+    parts: MAX_FILES + 32,
+    headerPairs: 100,
   },
   fileFilter: (req, file, callback) => {
+    // Keep this filter synchronous; async fileFilter implementations can introduce
+    // request-teardown races in affected Multer versions.
     if (!ALLOWED_IMAGES.has(file.mimetype)) {
-      return callback(
-        new ApiError(400, "Choose a JPEG, PNG, WEBP, or GIF image."),
-      );
+      return callback(new ApiError(400, "Choose a JPEG, PNG, WEBP, or GIF image."));
     }
-
     callback(null, true);
   },
 });

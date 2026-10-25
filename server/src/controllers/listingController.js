@@ -1,11 +1,19 @@
 import * as service from "../services/listingService.js";
 import { apiResponse } from "../utils/ApiResponse.js";
+
 export async function list(req, res) {
-  res.json(apiResponse("Listings", await service.findListings(req.query)));
+  res.json(
+    apiResponse(
+      "Listings",
+      await service.findListings(req.query, { includeOwnerPhone: Boolean(req.user) }),
+    ),
+  );
 }
+
 export async function myListings(req, res) {
   res.json(apiResponse("Your listings", await service.findOwnerListings(req.user.id)));
 }
+
 export async function create(req, res) {
   res
     .status(201)
@@ -16,9 +24,18 @@ export async function create(req, res) {
       ),
     );
 }
+
 export async function detail(req, res) {
-  res.json(apiResponse("Listing details", await service.findListingById(req.params.id)));
+  res.json(
+    apiResponse(
+      "Listing details",
+      await service.findListingById(req.params.id, {
+        includeOwnerPhone: Boolean(req.user),
+      }),
+    ),
+  );
 }
+
 export async function update(req, res) {
   res.json(
     apiResponse(
@@ -27,6 +44,7 @@ export async function update(req, res) {
     ),
   );
 }
+
 export async function remove(req, res) {
   await service.deleteListing(req.params.id, req.user);
   res.json(apiResponse("Listing deleted", null));
