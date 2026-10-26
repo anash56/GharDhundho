@@ -13,7 +13,7 @@ const COOKIE_MAX_AGE = TOKEN_TTL_SECONDS * 1000;
 function authCookieOptions() {
   return {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: env.authCookieSameSite,
     secure: env.isProduction,
     path: "/",
   };

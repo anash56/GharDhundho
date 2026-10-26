@@ -1,14 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import ConfirmDialog from "@/components/common/ConfirmDialog.jsx";
+import { setUnsavedChange } from "@/utils/unsavedChanges.js";
 
 const MAX_IMAGES = 6;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 function ListingForm({ initial, onSubmit, onCancel }) {
+  const navigate = useNavigate();
+  const dirtySourceId = useId();
   const [images, setImages] = useState([]);
   const [keptImages, setKeptImages] = useState(initial?.images || []);
   const [error, setError] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
   const previews = useMemo(
     () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
     [images],
@@ -17,6 +25,77 @@ function ListingForm({ initial, onSubmit, onCancel }) {
     () => () => previews.forEach(({ url }) => URL.revokeObjectURL(url)),
     [previews],
   );
+
+  function requestCancel() {
+    if (!onCancel) return;
+    if (isDirty) setShowDiscardConfirmation(true);
+    else onCancel();
+  }
+
+  function cancelDiscard() {
+    setShowDiscardConfirmation(false);
+    setPendingNavigation(null);
+  }
+
+  function confirmDiscard() {
+    const destination = pendingNavigation;
+    setShowDiscardConfirmation(false);
+    setPendingNavigation(null);
+    setIsDirty(false);
+
+    if (destination) {
+      navigate(destination);
+      return;
+    }
+    onCancel?.();
+  }
+
+  useEffect(() => {
+    setUnsavedChange(dirtySourceId, isDirty);
+    return () => setUnsavedChange(dirtySourceId, false);
+  }, [dirtySourceId, isDirty]);
+
+  useEffect(() => {
+    if (!isDirty) return undefined;
+
+    function handleBeforeUnload(event) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  // BrowserRouter does not expose a blocker in this app. Intercept ordinary
+  // same-tab internal links while dirty and route only after explicit discard.
+  useEffect(() => {
+    if (!isDirty) return undefined;
+
+    function handleInternalNavigation(event) {
+      if (
+        event.defaultPrevented || event.button !== 0 || event.metaKey ||
+        event.ctrlKey || event.shiftKey || event.altKey
+      ) return;
+
+      const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
+      if (!anchor || (anchor.target && anchor.target !== "_self") || anchor.hasAttribute("download")) return;
+
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin) return;
+
+      const destination = `${url.pathname}${url.search}${url.hash}`;
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (destination === current) return;
+
+      event.preventDefault();
+      setPendingNavigation(destination);
+      setShowDiscardConfirmation(true);
+    }
+
+    document.addEventListener("click", handleInternalNavigation, true);
+    return () => document.removeEventListener("click", handleInternalNavigation, true);
+  }, [isDirty]);
 
   function selectImages(event) {
     const selected = Array.from(event.target.files || []);
@@ -40,6 +119,7 @@ function ListingForm({ initial, onSubmit, onCancel }) {
 
   function removeNewImage(file) {
     setImages((current) => current.filter((entry) => entry !== file));
+    setIsDirty(true);
   }
 
   async function submit(event) {
@@ -66,7 +146,7 @@ function ListingForm({ initial, onSubmit, onCancel }) {
   }
 
   return (
-    <form className="listing-form" onSubmit={submit}>
+    <form className="listing-form" onSubmit={submit} onChangeCapture={() => setIsDirty(true)}>
       <h2>{initial ? "Edit your listing" : "Tell us about your place"}</h2>
       <div className="form-grid">
         <label>
@@ -116,7 +196,7 @@ function ListingForm({ initial, onSubmit, onCancel }) {
         </label>
         <label className="wide">
           Description
-          <textarea name="description" required defaultValue={initial?.description || "A comfortable home for testing."} />
+          <textarea name="description" required defaultValue={initial?.description || ""} />
         </label>
         <label className="wide">
           Amenities (comma separated)
@@ -145,7 +225,10 @@ function ListingForm({ initial, onSubmit, onCancel }) {
               <button
                 type="button"
                 aria-label="Remove existing image"
-                onClick={() => setKeptImages((current) => current.filter((entry) => entry !== image))}
+                onClick={() => {
+                  setKeptImages((current) => current.filter((entry) => entry !== image));
+                  setIsDirty(true);
+                }}
               >
                 <X size={15} />
               </button>
@@ -163,10 +246,20 @@ function ListingForm({ initial, onSubmit, onCancel }) {
       )}
       <button className="button" type="submit">{initial ? "Save changes" : "Publish listing"}</button>
       {onCancel && (
-        <button className="text-button form-cancel" type="button" onClick={onCancel}>
+        <button className="text-button form-cancel" type="button" onClick={requestCancel}>
           Cancel
         </button>
       )}
+      <ConfirmDialog
+        open={showDiscardConfirmation}
+        title="Discard unsaved changes?"
+        description="Your changes to this listing have not been saved. Do you want to discard them?"
+        confirmLabel="Discard changes"
+        cancelLabel="Keep editing"
+        destructive
+        onCancel={cancelDiscard}
+        onConfirm={confirmDiscard}
+      />
     </form>
   );
 }

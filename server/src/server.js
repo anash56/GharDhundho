@@ -11,6 +11,8 @@ const SAFE_CONFIG_ERRORS = new Set([
   "CLIENT_URL must use HTTP or HTTPS.",
   "CLIENT_URL must contain only the frontend origin, without a path or query.",
   "TRUST_PROXY_HOPS must be a non-negative integer when provided.",
+  "AUTH_COOKIE_SAME_SITE must be one of: lax, strict, none.",
+  "AUTH_COOKIE_SAME_SITE=none requires NODE_ENV=production.",
 ]);
 
 async function start() {

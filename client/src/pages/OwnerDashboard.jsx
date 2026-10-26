@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { dashboardService } from "@/services/dashboardService.js";
 import { listingService } from "@/services/listingService.js";
@@ -13,6 +13,7 @@ import {
   formatRent,
 } from "@/pages/Dashboard.jsx";
 import { imgFallback } from "@/utils/constants.js";
+import ConfirmDialog from "@/components/common/ConfirmDialog.jsx";
 
 export default function OwnerDashboard() {
   const { user, notify } = useAuth();
@@ -23,6 +24,7 @@ export default function OwnerDashboard() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [availabilityBusyId, setAvailabilityBusyId] = useState(null);
+  const [availabilityTarget, setAvailabilityTarget] = useState(null);
   const [statusBusyId, setStatusBusyId] = useState(null);
 
   useEffect(() => {
@@ -84,9 +86,16 @@ export default function OwnerDashboard() {
     }
   }
 
-  async function toggleAvailability(item) {
+  async function toggleAvailability(item, confirmedUnavailable = false) {
     if (availabilityBusyId) return;
-    const nextAvailability = !item.isAvailable;
+
+    // Hiding a listing affects public search, so ask before changing it.
+    if (item.isAvailable && !confirmedUnavailable) {
+      setAvailabilityTarget(item);
+      return;
+    }
+
+    const nextAvailability = confirmedUnavailable ? false : !item.isAvailable;
     const formData = new FormData();
     formData.set("isAvailable", String(nextAvailability));
     setAvailabilityBusyId(item._id);
@@ -95,6 +104,7 @@ export default function OwnerDashboard() {
       setItems((current) => current.map((entry) =>
         entry._id === item._id ? { ...entry, isAvailable: nextAvailability } : entry,
       ));
+      if (!nextAvailability) setAvailabilityTarget(null);
       notify(nextAvailability ? "Listing marked available" : "Listing marked unavailable");
     } catch (error) {
       notify(error.response?.data?.message || "Could not update listing availability");
@@ -125,7 +135,7 @@ export default function OwnerDashboard() {
         user={user}
         description="Your spaces and the people looking for them."
         action={
-          <button className="button" onClick={() => { setEditing(null); setShowForm((open) => !open); }}>
+          <button className="button" disabled={showForm || Boolean(editing)} onClick={() => setShowForm(true)}>
             <Plus size={18} /> Add a listing
           </button>
         }
@@ -156,13 +166,14 @@ export default function OwnerDashboard() {
               <button
                 className="icon-action"
                 aria-label={`Edit listing: ${item.title}`}
+                disabled={showForm || Boolean(editing)}
                 onClick={() => { setShowForm(false); setEditing(item); }}
               >
                 <Pencil size={15} /> Edit
               </button>
               <button
                 className="icon-action"
-                disabled={availabilityBusyId === item._id}
+                disabled={showForm || Boolean(editing) || availabilityBusyId === item._id}
                 onClick={() => toggleAvailability(item)}
               >
                 {availabilityBusyId === item._id ? "Saving…" : item.isAvailable ? "Mark unavailable" : "Mark available"}
@@ -170,6 +181,7 @@ export default function OwnerDashboard() {
               <button
                 className="icon-action danger"
                 aria-label={`Delete listing: ${item.title}`}
+                disabled={showForm || Boolean(editing)}
                 onClick={() => setDeleteTarget(item)}
               >
                 <Trash2 size={15} />
@@ -214,6 +226,19 @@ export default function OwnerDashboard() {
       ) : (
         <p className="muted">No messages yet. They’ll appear here when someone reaches out.</p>
       )}
+      <ConfirmDialog
+        open={Boolean(availabilityTarget)}
+        title="Mark this listing unavailable?"
+        description={availabilityTarget ? `â€œ${availabilityTarget.title}â€ will be hidden from public search. You can mark it available again from your dashboard.` : ""}
+        confirmLabel="Mark unavailable"
+        busyLabel="Updatingâ€¦"
+        busy={Boolean(availabilityTarget && availabilityBusyId === availabilityTarget._id)}
+        icon={EyeOff}
+        onCancel={() => setAvailabilityTarget(null)}
+        onConfirm={() => {
+          if (availabilityTarget) void toggleAvailability(availabilityTarget, true);
+        }}
+      />
       <DeleteListingDialog
         listing={deleteTarget}
         busy={deleting}

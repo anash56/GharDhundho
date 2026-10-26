@@ -2,6 +2,7 @@ import "dotenv/config";
 
 const nodeEnv = process.env.NODE_ENV || "development";
 const rawTrustProxyHops = process.env.TRUST_PROXY_HOPS?.trim();
+const rawAuthCookieSameSite = (process.env.AUTH_COOKIE_SAME_SITE || "lax").trim().toLowerCase();
 const configuredClientUrl = process.env.CLIENT_URL?.trim();
 
 function normalizeOrigin(value) {
@@ -24,6 +25,7 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET,
   clientUrl: normalizeOrigin(configuredClientUrl || (nodeEnv === "production" ? "" : "http://localhost:5173")),
   trustProxyHops: rawTrustProxyHops ? Number(rawTrustProxyHops) : false,
+  authCookieSameSite: rawAuthCookieSameSite,
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
@@ -61,6 +63,14 @@ export function loadEnv() {
     if (clientUrl.pathname !== "/" || clientUrl.search || clientUrl.hash) {
       throw new Error("CLIENT_URL must contain only the frontend origin, without a path or query.");
     }
+  }
+
+  if (!["lax", "strict", "none"].includes(env.authCookieSameSite)) {
+    throw new Error("AUTH_COOKIE_SAME_SITE must be one of: lax, strict, none.");
+  }
+
+  if (env.authCookieSameSite === "none" && !env.isProduction) {
+    throw new Error("AUTH_COOKIE_SAME_SITE=none requires NODE_ENV=production.");
   }
 
   if (
