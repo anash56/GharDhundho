@@ -1913,3 +1913,234 @@ em {
     transition: none;
   }
 }
+/* UX Phase 4: clearer property listing form and upload feedback. */
+.listing-form-heading {
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.listing-form-heading .eyebrow {
+  margin-bottom: 3px;
+}
+.listing-form-heading h2 {
+  margin: 9px 0 8px;
+  font-size: 25px;
+  letter-spacing: -0.7px;
+  line-height: 1.25;
+}
+.listing-form-heading p {
+  max-width: 680px;
+  margin: 0;
+  color: #69736a;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.listing-form-heading p span,
+.required-mark {
+  color: #bb4b32;
+  font-weight: 700;
+}
+.optional-mark {
+  margin-left: 5px;
+  color: #7b837b;
+  font-size: 10px;
+  font-weight: 500;
+}
+.listing-form-section {
+  padding: 21px 0 7px;
+  border-bottom: 1px solid var(--line);
+}
+.listing-form-section:last-of-type {
+  border-bottom: 0;
+}
+.listing-form-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 9px;
+}
+.listing-form-section-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #eaf3ee;
+  color: var(--teal);
+}
+.listing-form-section-heading h3 {
+  margin: 1px 0 4px;
+  font: 700 15px Manrope, sans-serif;
+  color: var(--ink);
+}
+.listing-form-section-heading p {
+  margin: 0;
+  color: #798078;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.listing-form .form-grid {
+  gap: 0 18px;
+}
+.listing-form label {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.listing-form input,
+.listing-form select,
+.listing-form textarea {
+  min-height: 43px;
+  font-size: 13px;
+  border-color: #dcded5;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.listing-form textarea {
+  min-height: 120px;
+  line-height: 1.6;
+}
+.listing-form input:focus-visible,
+.listing-form select:focus-visible,
+.listing-form textarea:focus-visible {
+  outline: 3px solid #b9d5ca;
+  outline-offset: 1px;
+  border-color: var(--teal);
+}
+.listing-form label small {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.listing-photo-input-label input[type="file"] {
+  min-height: auto;
+  padding: 11px;
+  cursor: pointer;
+  background: #fffefa;
+}
+.listing-photo-tip {
+  margin: 12px 0 14px;
+  color: #69736a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.listing-photo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  min-height: 124px;
+  margin: 10px 0 14px;
+  padding: 18px;
+  border: 1px dashed #d2d9d0;
+  border-radius: 9px;
+  background: #fffefa;
+  color: var(--teal);
+  text-align: center;
+}
+.listing-photo-empty span {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+.listing-photo-empty small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.listing-form .image-previews {
+  margin: 15px 0;
+  gap: 13px;
+}
+.listing-form .image-preview {
+  width: 112px;
+  height: 88px;
+}
+.listing-form .image-preview img {
+  display: block;
+}
+.listing-form .image-preview button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+.listing-form-error {
+  margin: 18px 0 0;
+  padding: 11px 13px;
+  border: 1px solid #f0c9bd;
+  border-radius: 8px;
+  background: #fff7f4;
+  line-height: 1.5;
+}
+.listing-form-submit-status {
+  margin: 15px 0 0;
+  color: var(--teal);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.listing-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  padding-top: 19px;
+  border-top: 1px solid var(--line);
+}
+.listing-form-actions .button {
+  min-height: 45px;
+}
+.listing-form-actions .form-cancel {
+  margin: 0;
+  min-height: 40px;
+  padding: 9px 12px;
+}
+.listing-form .button:disabled {
+  opacity: .65;
+  cursor: wait;
+  transform: none;
+}
+@media (max-width: 650px) {
+  .listing-form {
+    padding: 17px;
+  }
+  .listing-form-heading h2 {
+    font-size: 22px;
+  }
+  .listing-form-section {
+    padding-top: 18px;
+  }
+  .listing-form-section-heading {
+    gap: 9px;
+  }
+  .listing-form-section-icon {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+  .listing-form .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .listing-form .form-grid .wide {
+    grid-column: auto;
+  }
+  .listing-form-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .listing-form-actions .button,
+  .listing-form-actions .form-cancel {
+    width: 100%;
+    justify-content: center;
+    margin: 0;
+  }
+  .listing-form .image-preview {
+    width: 96px;
+    height: 76px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .listing-form input,
+  .listing-form select,
+  .listing-form textarea {
+    transition: none;
+  }
+}
