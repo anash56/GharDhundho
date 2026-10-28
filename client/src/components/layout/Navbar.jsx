@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Home as HomeIcon, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { authService } from "@/services/authService.js";
@@ -13,6 +13,28 @@ function Header() {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [showUnsavedLogoutConfirmation, setShowUnsavedLogoutConfirmation] = useState(false);
   const nav = useNavigate();
+  const location = useLocation();
+  const menuToggleRef = useRef(null);
+
+  // Keep the mobile menu from staying open after navigation.
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname, location.search]);
+
+  // Escape closes the mobile navigation and restores focus to its toggle.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        menuToggleRef.current?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
 
   function requestLogout() {
     if (hasUnsavedChanges()) {
@@ -48,18 +70,32 @@ function Header() {
         </Link>
         <button
           className="mobile-menu"
+          ref={menuToggleRef}
           type="button"
-          aria-label="Toggle navigation menu"
+          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+          aria-controls="primary-navigation"
           aria-expanded={open}
           onClick={() => setOpen((current) => !current)}
         >
           {open ? <X /> : <Menu />}
         </button>
-        <nav className={open ? "nav-open" : ""}>
-          <Link to="/listings" onClick={() => setOpen(false)}>Find a home</Link>
+        <nav id="primary-navigation" className={open ? "nav-open" : ""} aria-label="Main navigation">
+          <NavLink
+            to="/listings"
+            className={({ isActive }) => `nav-link${isActive ? " nav-link-active" : ""}`}
+            onClick={() => setOpen(false)}
+          >
+            Find a home
+          </NavLink>
           {user ? (
             <>
-              <Link to="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) => `nav-link${isActive ? " nav-link-active" : ""}`}
+                onClick={() => setOpen(false)}
+              >
+                Dashboard
+              </NavLink>
               <span className="hello">Hi, {user.name.split(" ")[0]}</span>
               <button className="text-button" type="button" disabled={loggingOut} onClick={requestLogout}>
                 <LogOut size={16} /> {loggingOut ? "Signing out…" : "Sign out"}
@@ -67,7 +103,13 @@ function Header() {
             </>
           ) : (
             <>
-              <Link to="/login" onClick={() => setOpen(false)}>Log in</Link>
+              <NavLink
+                to="/login"
+                className={({ isActive }) => `nav-link${isActive ? " nav-link-active" : ""}`}
+                onClick={() => setOpen(false)}
+              >
+                Log in
+              </NavLink>
               <Link className="button button-small" to="/register" onClick={() => setOpen(false)}>
                 Get started <ArrowRight size={15} />
               </Link>
