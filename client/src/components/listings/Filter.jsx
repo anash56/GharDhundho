@@ -1,16 +1,25 @@
 function Filter({ label, name, value, change, opts }) {
   return (
-    <div className="filter-block">
+    <div className="filter-block" role="group" aria-label={label}>
       <b>{label}</b>
-      {opts.map((o) => (
-        <label className="check" key={o}>
+      <label className="check">
+        <input
+          type="radio"
+          name={name}
+          checked={!value}
+          onChange={() => change(name, "")}
+        />
+        <span>Any</span>
+      </label>
+      {opts.map((option) => (
+        <label className="check" key={option}>
           <input
             type="radio"
             name={name}
-            checked={value === o}
-            onChange={() => change(name, value === o ? "" : o)}
+            checked={value === option}
+            onChange={() => change(name, option)}
           />
-          <span>{o === "semi" ? "Semi-furnished" : o[0].toUpperCase() + o.slice(1)}</span>
+          <span>{option === "semi" ? "Semi-furnished" : option[0].toUpperCase() + option.slice(1)}</span>
         </label>
       ))}
     </div>
