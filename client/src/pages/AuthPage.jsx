@@ -36,7 +36,21 @@ function AuthPage({ register = false }) {
         : authService.login(body));
       setUser(response.data.data);
       notify(register ? "Welcome to GharDhundho!" : "You’re back home");
-      navigate(getSafeDestination(location.state?.from), { replace: true });
+      const destinationState = {};
+      if (
+        typeof location.state?.returnTo === "string" &&
+        location.state.returnTo.startsWith("/listings") &&
+        !location.state.returnTo.startsWith("//")
+      ) {
+        destinationState.from = location.state.returnTo;
+      }
+      if (typeof location.state?.enquiryDraft === "string") {
+        destinationState.enquiryDraft = location.state.enquiryDraft;
+      }
+      navigate(getSafeDestination(location.state?.from), {
+        replace: true,
+        state: Object.keys(destinationState).length > 0 ? destinationState : undefined,
+      });
     } catch (error) {
       notify(error.response?.data?.message || "Something went wrong. Please try again.");
     } finally {

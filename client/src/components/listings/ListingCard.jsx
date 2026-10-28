@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Heart, MapPin } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useSaved } from "@/hooks/useSaved.js";
@@ -7,6 +7,12 @@ import { imgFallback } from "@/utils/constants.js";
 
 function ListingCard({ item, saved = false, onSavedChange }) {
   const { user, notify } = useAuth();
+  const location = useLocation();
+  const detailState = {
+    from: location.pathname === "/listings"
+      ? `${location.pathname}${location.search}`
+      : "/listings",
+  };
   const { saveListing, removeSavedListing } = useSaved();
   const [isSaved, setIsSaved] = useState(saved);
 
@@ -38,7 +44,7 @@ function ListingCard({ item, saved = false, onSavedChange }) {
   return (
     <article className="listing-card">
       <div className="card-image">
-        <Link to={`/listings/${item._id}`} aria-label={item.title}>
+        <Link to={`/listings/${item._id}`} state={detailState} aria-label={item.title}>
           <img
             loading="lazy"
             src={item.images?.[0]?.url || imgFallback}
@@ -60,7 +66,7 @@ function ListingCard({ item, saved = false, onSavedChange }) {
           <Heart size={18} fill={isSaved ? "currentColor" : "none"} />
         </button>
       </div>
-      <Link to={`/listings/${item._id}`} className="card-content">
+      <Link to={`/listings/${item._id}`} state={detailState} className="card-content">
         <div className="location">
           <MapPin size={14} />
           {item.locality}, {item.city}

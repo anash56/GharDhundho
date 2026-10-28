@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Heart, MapPin, Send, CheckCircle2 } from "lucide-react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Heart, MapPin, Send, CheckCircle2 } from "lucide-react";
 import { listingService } from "@/services/listingService.js";
 import { enquiryService } from "@/services/enquiryService.js";
 import { savedService } from "@/services/savedService.js";
@@ -13,9 +13,25 @@ import Empty from "@/components/common/EmptyState.jsx";
 function Detail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const requestedReturnTo = location.state?.from;
+  const backToHomes =
+    typeof requestedReturnTo === "string" &&
+    requestedReturnTo.startsWith("/listings") &&
+    !requestedReturnTo.startsWith("//")
+      ? requestedReturnTo
+      : "/listings";
   const [item, setItem] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEnquiring, setIsEnquiring] = useState(false);
+  const [enquirySent, setEnquirySent] = useState(false);
+  const [message, setMessage] = useState(() =>
+    typeof location.state?.enquiryDraft === "string"
+      ? location.state.enquiryDraft
+      : "",
+  );
   const { user, notify } = useAuth();
 
   useEffect(() => {
@@ -106,12 +122,15 @@ function Detail() {
 
   async function enquire(event) {
     event.preventDefault();
-
-    const form = event.currentTarget;
+    if (isEnquiring) return;
 
     if (!user) {
       navigate("/login", {
-        state: { from: `/listings/${id}` },
+        state: {
+          from: `/listings/${id}`,
+          returnTo: backToHomes,
+          enquiryDraft: message,
+        },
       });
       return;
     }
@@ -121,34 +140,43 @@ function Detail() {
       return;
     }
 
-    const message = new FormData(form).get("message");
+    if (item?.isAvailable === false) {
+      notify("This home is not currently available.");
+      return;
+    }
 
+    setIsEnquiring(true);
     try {
-      await enquiryService.create({
-        listingId: id,
-        message,
-      });
-
+      await enquiryService.create({ listingId: id, message });
+      setMessage("");
+      setEnquirySent(true);
       notify("Your enquiry has been sent!");
-      form.reset();
     } catch (error) {
       notify(
         error.response?.data?.message ||
-        "Could not send enquiry",
+          "Could not send enquiry. Your message is still here; please try again.",
       );
+    } finally {
+      setIsEnquiring(false);
     }
   }
 
   async function save() {
-    if (user?.role !== "seeker") {
-      notify(
-        user
-          ? "Only seeker accounts can save homes."
-          : "Sign in as a seeker to save homes.",
-      );
+    if (isSaving) return;
+
+    if (!user) {
+      navigate("/login", {
+        state: { from: `/listings/${id}`, returnTo: backToHomes },
+      });
       return;
     }
 
+    if (user.role !== "seeker") {
+      notify("Only seeker accounts can save homes.");
+      return;
+    }
+
+    setIsSaving(true);
     try {
       if (isSaved) {
         await savedService.remove(id);
@@ -160,9 +188,9 @@ function Detail() {
         notify("Saved to your list");
       }
     } catch (error) {
-      notify(
-        error.response?.data?.message || "Could not save",
-      );
+      notify(error.response?.data?.message || "Could not update saved homes. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -185,6 +213,10 @@ function Detail() {
 
   return (
     <main className="wrap page detail-page">
+      <Link to={backToHomes} className="detail-back">
+        <ArrowLeft size={16} aria-hidden="true" />
+        Back to homes
+      </Link>
       <div className="detail-image">
         <img
           src={images[imageIndex]?.url || imgFallback}
@@ -194,6 +226,12 @@ function Detail() {
             event.currentTarget.src = imgFallback;
           }}
         />
+
+        {images.length > 1 && (
+          <span className="detail-image-count" aria-live="polite">
+            {imageIndex + 1} / {images.length}
+          </span>
+        )}
 
         {images.length > 1 && (
           <>
@@ -247,15 +285,17 @@ function Detail() {
         <button
           type="button"
           className="button button-light"
-          aria-label={isSaved ? "Unsave home" : "Save home"}
+          aria-label={isSaving ? "Updating saved home" : isSaved ? "Unsave home" : "Save home"}
           aria-pressed={isSaved}
+          aria-busy={isSaving}
+          disabled={isSaving}
           onClick={save}
         >
           <Heart
             size={17}
             fill={isSaved ? "currentColor" : "none"}
           />
-          {isSaved ? "Saved" : "Save home"}
+          {isSaving ? "Updatingâ€¦" : isSaved ? "Saved" : "Save home"}
         </button>
       </div>
 
@@ -289,11 +329,15 @@ function Detail() {
 
           <h2>Little things included</h2>
 
-          <div className="amenities">
-            {(item.amenities || []).map((amenity) => (
-              <span key={amenity}>✓ {amenity}</span>
-            ))}
-          </div>
+          {item.amenities?.length ? (
+            <div className="amenities">
+              {item.amenities.map((amenity) => (
+                <span key={amenity}>âœ“ {amenity}</span>
+              ))}
+            </div>
+          ) : (
+            <p className="amenities-empty">The owner hasn't added amenities yet.</p>
+          )}
 
           <div className="owner-card">
             <div className="avatar">
@@ -328,33 +372,45 @@ function Detail() {
             {Number(item.deposit || 0).toLocaleString("en-IN")}
           </p>
 
-          {user && user.role !== "seeker" ? (
+          {item.isAvailable === false ? (
+            <div className="detail-unavailable" role="status">
+              <b>This home isn't currently available.</b>
+              <p>The owner has marked this listing unavailable, so enquiries are paused.</p>
+            </div>
+          ) : user && user.role !== "seeker" ? (
             <div className="muted" role="status">
               <b>Contacting the owner</b>
-              <p>
-                Only seeker accounts can send enquiries.
-                Sign in with a seeker account to contact
-                this owner.
-              </p>
+              <p>Only seeker accounts can send enquiries. Use a seeker account to contact this owner.</p>
             </div>
           ) : (
-            <form onSubmit={enquire}>
-              <label htmlFor="message">
-                Say hello to the owner
-              </label>
-
+            <form onSubmit={enquire} aria-busy={isEnquiring}>
+              <label htmlFor="message">Say hello to the owner</label>
               <textarea
                 id="message"
                 name="message"
+                value={message}
+                onChange={(event) => {
+                  setMessage(event.target.value);
+                  if (enquirySent) setEnquirySent(false);
+                }}
                 required
                 minLength={5}
                 maxLength={2000}
+                aria-describedby="enquiry-help"
                 placeholder="Hi! I'm interested in this place..."
               />
-
-              <button type="submit" className="button">
-                <Send size={16} />
-                Send enquiry
+              <small className="enquiry-hint" id="enquiry-help">
+                {user ? "Share a little about your move or ask a question." : "You'll sign in before the message is sent. We'll keep your message ready."}
+                <span>{message.length}/2000</span>
+              </small>
+              {enquirySent && (
+                <p className="enquiry-success" role="status" aria-live="polite">
+                  Your enquiry was sent. The owner can now respond to you.
+                </p>
+              )}
+              <button type="submit" className="button" disabled={isEnquiring}>
+                <Send size={16} aria-hidden="true" />
+                {isEnquiring ? "Sending enquiryâ€¦" : "Send enquiry"}
               </button>
             </form>
           )}
