@@ -43,7 +43,10 @@ function ListingCard({ item, saved = false, onSavedChange }) {
             loading="lazy"
             src={item.images?.[0]?.url || imgFallback}
             alt={`Photo of ${item.title}`}
-            onError={(event) => { event.currentTarget.src = imgFallback; }}
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = imgFallback;
+            }}
           />
         </Link>
         <span className="type-pill">{item.propertyType}</span>

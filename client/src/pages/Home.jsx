@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Heart, MapPin, Search } from "lucide-react";
 import Step from "@/components/common/Step.jsx";
 import ListingShelf from "@/components/listings/ListingShelf.jsx";
-import { popularCities, propertyTypes } from "@/utils/constants.js";
+import { imgFallback, popularCities, propertyTypes } from "@/utils/constants.js";
 function Home() {
   const [city, setCity] = useState("");
   const [typ, setTyp] = useState("");
@@ -29,6 +29,7 @@ function Home() {
               <div className="search-city">
                 <MapPin size={19} />
                 <input
+                  aria-label="City or locality"
                   placeholder="Which city are you moving to?"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
@@ -40,7 +41,7 @@ function Home() {
                   }
                 />
               </div>
-              <select value={typ} onChange={(e) => setTyp(e.target.value)}>
+              <select aria-label="Property type" value={typ} onChange={(e) => setTyp(e.target.value)}>
                 <option value="">Any type</option>
                 {propertyTypes.map((type) => (
                   <option value={type} key={type}>
@@ -75,7 +76,15 @@ function Home() {
             </div>
           </div>
           <div className="hero-visual">
-            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85" />
+            <img
+              src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85"
+              alt="A bright, welcoming home interior"
+              fetchPriority="high"
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = imgFallback;
+              }}
+            />
             <div className="float-card">
               <span className="float-icon">
                 <MapPin size={17} />
@@ -96,13 +105,13 @@ function Home() {
         <div className="hero-bottom wrap">
           <span>MADE FOR THE MOVE</span>
           <div>
-            <b>12</b> spaces to start over in
+            <b>Search</b> by city and home type
           </div>
           <div>
-            <b>3</b> cities and growing
+            <b>Compare</b> rent and furnishing
           </div>
           <div>
-            <b>1</b> message from home
+            <b>Connect</b> directly with owners
           </div>
         </div>
       </section>

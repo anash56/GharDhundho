@@ -1478,3 +1478,64 @@ em {
     display: none;
   }
 }
+
+/* UX Phase 1: clear recovery states and stronger keyboard focus. */
+.featured-state,
+.dashboard-async-state {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 28px;
+  text-align: center;
+}
+.featured-state h3 {
+  margin: 0 0 8px;
+  font: 700 17px Manrope, sans-serif;
+  color: var(--ink);
+}
+.featured-state p,
+.dashboard-async-state p {
+  max-width: 520px;
+  margin: 0 auto 16px;
+  color: #69736a;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.featured-state-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.dashboard-async-state {
+  margin: 16px 0 28px;
+}
+.dashboard-row-skeleton {
+  height: 76px;
+  margin: 0 0 12px;
+}
+.dashboard-async-state p {
+  margin-top: 12px;
+}
+.button:disabled,
+.text-button:disabled,
+.icon-action:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+  transform: none;
+}
+:focus-visible {
+  outline: 3px solid #286d61;
+  outline-offset: 3px;
+}
+@media (max-width: 650px) {
+  .featured-state,
+  .dashboard-async-state {
+    padding: 22px 16px;
+  }
+  .featured-state-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

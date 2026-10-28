@@ -19,6 +19,9 @@ export default function OwnerDashboard() {
   const { user, notify } = useAuth();
   const [items, setItems] = useState([]);
   const [received, setReceived] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -29,6 +32,8 @@ export default function OwnerDashboard() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setLoadError("");
     Promise.all([
       listingService.mine(),
       dashboardService.get("/enquiries/received"),
@@ -38,15 +43,18 @@ export default function OwnerDashboard() {
         setItems(listings);
         setReceived(enquiries.data.data || []);
       })
-      .catch((error) => {
+      .catch(() => {
         if (active) {
-          notify(error.response?.data?.message || "Could not load your dashboard. Please retry.");
+          setLoadError("We couldn't load your listings and enquiries. Check your connection and try again.");
         }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
     return () => {
       active = false;
     };
-  }, [notify]);
+  }, [retryCount]);
 
   async function create(formData) {
     try {
@@ -135,11 +143,26 @@ export default function OwnerDashboard() {
         user={user}
         description="Your spaces and the people looking for them."
         action={
-          <button className="button" disabled={showForm || Boolean(editing)} onClick={() => setShowForm(true)}>
+          <button className="button" disabled={loading || Boolean(loadError) || showForm || Boolean(editing)} onClick={() => setShowForm(true)}>
             <Plus size={18} /> Add a listing
           </button>
         }
       />
+      {loading ? (
+        <div className="dashboard-async-state" role="status" aria-live="polite">
+          <div className="skeleton dashboard-row-skeleton" />
+          <div className="skeleton dashboard-row-skeleton" />
+          <p>Loading your listings and enquiriesâ€¦</p>
+        </div>
+      ) : loadError ? (
+        <div className="dashboard-async-state dashboard-load-error" role="alert">
+          <p>{loadError}</p>
+          <button className="button button-small" type="button" onClick={() => setRetryCount((count) => count + 1)}>
+            Try again
+          </button>
+        </div>
+      ) : (
+        <>
       {showForm && <ListingForm onSubmit={create} onCancel={() => setShowForm(false)} />}
       {editing && (
         <ListingForm
@@ -155,7 +178,14 @@ export default function OwnerDashboard() {
         <div className="dash-list">
           {items.map((item) => (
             <div className="dash-row" key={item._id}>
-              <img src={item.images?.[0]?.url || imgFallback} alt={`Photo of ${item.title}`} />
+              <img
+                src={item.images?.[0]?.url || imgFallback}
+                alt={`Photo of ${item.title}`}
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = imgFallback;
+                }}
+              />
               <div>
                 <b>{item.title}</b>
                 <small>{item.locality}, {item.city} · {formatRent(item.rent)}/mo</small>
@@ -245,6 +275,8 @@ export default function OwnerDashboard() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
+        </>
+      )}
     </main>
   );
 }

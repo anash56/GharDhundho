@@ -9,12 +9,17 @@ import {
 } from "@/pages/Dashboard.jsx";
 
 export default function SeekerDashboard() {
-  const { user, notify } = useAuth();
+  const { user } = useAuth();
   const [saved, setSaved] = useState([]);
   const [sent, setSent] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setLoadError("");
     Promise.all([
       dashboardService.get("/saved"),
       dashboardService.get("/enquiries/sent"),
@@ -24,15 +29,18 @@ export default function SeekerDashboard() {
         setSaved(savedResponse.data.data || []);
         setSent(sentResponse.data.data || []);
       })
-      .catch((error) => {
+      .catch(() => {
         if (active) {
-          notify(error.response?.data?.message || "Could not load your dashboard. Please retry.");
+          setLoadError("We couldn't load your saved homes and enquiries. Check your connection and try again.");
         }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
     return () => {
       active = false;
     };
-  }, [notify]);
+  }, [retryCount]);
 
   return (
     <main className="wrap page dashboard">
@@ -40,6 +48,21 @@ export default function SeekerDashboard() {
         user={user}
         description="Your saved places and conversations."
       />
+      {loading ? (
+        <div className="dashboard-async-state" role="status" aria-live="polite">
+          <div className="skeleton dashboard-row-skeleton" />
+          <div className="skeleton dashboard-row-skeleton" />
+          <p>Loading your saved homes and enquiriesâ€¦</p>
+        </div>
+      ) : loadError ? (
+        <div className="dashboard-async-state dashboard-load-error" role="alert">
+          <p>{loadError}</p>
+          <button className="button button-small" type="button" onClick={() => setRetryCount((count) => count + 1)}>
+            Try again
+          </button>
+        </div>
+      ) : (
+        <>
       <DashboardSectionTitle count={saved.length}>Saved homes</DashboardSectionTitle>
       {saved.length ? (
         <div className="cards">
@@ -75,6 +98,8 @@ export default function SeekerDashboard() {
           title="No enquiries yet"
           text="Send a message to an owner when a place catches your eye."
         />
+      )}
+        </>
       )}
     </main>
   );

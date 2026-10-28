@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Home interior placeholder</title>
+  <desc id="desc">A calm illustration of a bright room with a window, sofa, plant, and table.</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f4eb"/>
+      <stop offset="1" stop-color="#e7eee7"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d7c9b4"/>
+      <stop offset="1" stop-color="#c5b49d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#wall)"/>
+  <path d="M0 590 L1200 530 L1200 800 L0 800Z" fill="url(#floor)"/>
+  <rect x="130" y="92" width="370" height="350" rx="10" fill="#fffefa"/>
+  <rect x="150" y="112" width="330" height="310" rx="4" fill="#c9e0df"/>
+  <path d="M150 330 Q230 240 310 315 T480 280 V422 H150Z" fill="#9fc8b5"/>
+  <path d="M150 370 Q240 300 315 365 T480 340 V422 H150Z" fill="#72a78e"/>
+  <path d="M315 112 V422 M150 267 H480" stroke="#fffefa" stroke-width="14"/>
+  <rect x="520" y="165" width="570" height="16" rx="8" fill="#d5d9cf"/>
+  <rect x="610" y="181" width="390" height="290" rx="12" fill="#e2d5c1"/>
+  <rect x="640" y="208" width="330" height="235" rx="7" fill="#f7f2e8"/>
+  <rect x="640" y="208" width="330" height="18" rx="7" fill="#b5c8b8"/>
+  <rect x="535" y="475" width="520" height="155" rx="26" fill="#47786b"/>
+  <rect x="560" y="451" width="475" height="105" rx="26" fill="#5e9181"/>
+  <rect x="574" y="464" width="175" height="82" rx="18" fill="#edf0e5"/>
+  <rect x="767" y="464" width="245" height="82" rx="18" fill="#d9b99a"/>
+  <path d="M560 625 L560 670 M1035 625 L1035 670" stroke="#765844" stroke-width="18" stroke-linecap="round"/>
+  <ellipse cx="810" cy="700" rx="300" ry="35" fill="#8f7c66" opacity=".22"/>
+  <rect x="170" y="520" width="170" height="115" rx="10" fill="#b86f50"/>
+  <rect x="188" y="538" width="134" height="80" rx="7" fill="#dfb79a"/>
+  <path d="M255 520 V455 M255 490 C198 492 195 438 220 420 C248 427 263 453 255 490 M255 474 C292 467 320 424 294 401 C269 410 249 442 255 474" fill="#47786b"/>
+  <path d="M255 455 C235 410 244 381 275 366 C302 397 291 433 255 455" fill="#679b7d"/>
+  <rect x="0" y="0" width="1200" height="800" fill="#fffefa" opacity=".05"/>
+</svg>

@@ -190,6 +190,7 @@ function Detail() {
           src={images[imageIndex]?.url || imgFallback}
           alt={item.title}
           onError={(event) => {
+            event.currentTarget.onerror = null;
             event.currentTarget.src = imgFallback;
           }}
         />
@@ -229,7 +230,14 @@ function Detail() {
                   aria-pressed={imageIndex === index}
                   onClick={() => setImageIndex(index)}
                 >
-                  <img src={image.url} alt="" />
+                  <img
+                    src={image.url || imgFallback}
+                    alt=""
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = imgFallback;
+                    }}
+                  />
                 </button>
               ))}
             </div>
