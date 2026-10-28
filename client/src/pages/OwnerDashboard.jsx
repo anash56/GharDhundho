@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { dashboardService } from "@/services/dashboardService.js";
@@ -14,6 +15,17 @@ import {
 } from "@/pages/Dashboard.jsx";
 import { imgFallback } from "@/utils/constants.js";
 import ConfirmDialog from "@/components/common/ConfirmDialog.jsx";
+
+function formatDashboardDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
 
 export default function OwnerDashboard() {
   const { user, notify } = useAuth();
@@ -163,6 +175,23 @@ export default function OwnerDashboard() {
         </div>
       ) : (
         <>
+      <div className="dashboard-metrics" aria-label="Dashboard summary">
+        <div className="dashboard-metric">
+          <span className="dashboard-metric-label">Your listings</span>
+          <strong>{items.length}</strong>
+          <small>All your properties</small>
+        </div>
+        <div className="dashboard-metric">
+          <span className="dashboard-metric-label">Available</span>
+          <strong>{items.filter((item) => item.isAvailable).length}</strong>
+          <small>Visible in home search</small>
+        </div>
+        <div className="dashboard-metric">
+          <span className="dashboard-metric-label">New enquiries</span>
+          <strong>{received.filter((enquiry) => enquiry.status === "new").length}</strong>
+          <small>Waiting for your response</small>
+        </div>
+      </div>
       {showForm && <ListingForm onSubmit={create} onCancel={() => setShowForm(false)} />}
       {editing && (
         <ListingForm
@@ -177,7 +206,7 @@ export default function OwnerDashboard() {
       {items.length ? (
         <div className="dash-list">
           {items.map((item) => (
-            <div className="dash-row" key={item._id}>
+            <div className="dash-row owner-listing-row" key={item._id}>
               <img
                 src={item.images?.[0]?.url || imgFallback}
                 alt={`Photo of ${item.title}`}
@@ -190,6 +219,15 @@ export default function OwnerDashboard() {
                 <b>{item.title}</b>
                 <small>{item.locality}, {item.city} · {formatRent(item.rent)}/mo</small>
               </div>
+              <Link
+                className="dashboard-preview-link"
+                to={`/listings/${item._id}`}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Preview listing: ${item.title}`}
+              >
+                Preview
+              </Link>
               <span className={item.isAvailable ? "status" : "status off"}>
                 {item.isAvailable ? "Available" : "Unavailable"}
               </span>
@@ -230,17 +268,27 @@ export default function OwnerDashboard() {
       {received.length ? (
         <div className="enquiries">
           {received.map((enquiry) => (
-            <article key={enquiry._id}>
-              <div>
-                <b>{enquiry.seeker?.name || "Seeker"}</b>
+            <article className="owner-enquiry-card" key={enquiry._id}>
+              <div className="owner-enquiry-main">
+                <div className="owner-enquiry-heading">
+                  <b>{enquiry.seeker?.name || "Seeker"}</b>
+                  <span className={`enquiry-status-pill status-${enquiry.status}`}>{enquiry.status}</span>
+                </div>
                 <small>
                   about {enquiry.listing?.title || "a listing"}
                   {enquiry.seeker?.email ? ` · ${enquiry.seeker.email}` : ""}
                   {enquiry.seeker?.phone ? ` · ${enquiry.seeker.phone}` : ""}
                 </small>
                 <p>{enquiry.message}</p>
+                {enquiry.createdAt && (
+                  <small className="dashboard-enquiry-date">
+                    Received {formatDashboardDate(enquiry.createdAt)}
+                  </small>
+                )}
               </div>
-              <select
+              <label className="owner-enquiry-status">
+                <span>Update status</span>
+                <select
                 aria-label={`Status for enquiry from ${enquiry.seeker?.name || "seeker"}`}
                 value={enquiry.status}
                 disabled={statusBusyId === enquiry._id}
@@ -249,7 +297,8 @@ export default function OwnerDashboard() {
                 <option value="new">new</option>
                 <option value="contacted">contacted</option>
                 <option value="closed">closed</option>
-              </select>
+                </select>
+              </label>
             </article>
           ))}
         </div>

@@ -2144,3 +2144,268 @@ em {
     transition: none;
   }
 }
+
+/* UX Phase 5: clearer dashboard summaries and enquiry cards. */
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 30px;
+}
+.dashboard-metric {
+  min-width: 0;
+  padding: 17px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.dashboard-metric-label,
+.dashboard-metric small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.dashboard-metric strong {
+  display: block;
+  margin: 7px 0 4px;
+  color: var(--ink);
+  font: 700 28px/1.1 Manrope, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.dashboard-preview-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid #d9e5df;
+  border-radius: 7px;
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dashboard-preview-link:hover {
+  background: #f2f7f4;
+  border-color: #b9d2c6;
+}
+.owner-enquiry-card {
+  align-items: flex-start;
+}
+.owner-enquiry-main {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+.owner-enquiry-heading,
+.owner-enquiry-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.owner-enquiry-main > small {
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+.owner-enquiry-main > p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+.dashboard-enquiry-date {
+  display: block;
+  margin-top: 10px;
+}
+.owner-enquiry-status {
+  display: grid;
+  gap: 6px;
+  flex: 0 0 150px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+.owner-enquiry-status select {
+  width: 100%;
+  min-height: 40px;
+  font-size: 12px;
+  background: white;
+}
+.enquiry-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 27px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f0f1ef;
+  color: #5d655f;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.enquiry-status-pill.status-new {
+  background: #fff0e8;
+  color: #9a482c;
+}
+.enquiry-status-pill.status-contacted {
+  background: #eaf3ee;
+  color: #286d61;
+}
+.enquiry-status-pill.status-closed {
+  background: #f0f1ef;
+  color: #5d655f;
+}
+.seeker-enquiry-card {
+  margin: 12px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 5px 18px #213b2b06;
+}
+.seeker-enquiry-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.seeker-enquiry-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font: 700 16px/1.4 Manrope, sans-serif;
+}
+.seeker-enquiry-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.seeker-enquiry-location svg {
+  flex: 0 0 auto;
+  color: var(--teal);
+}
+.seeker-enquiry-message {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-left: 3px solid #d9e5df;
+  border-radius: 0 7px 7px 0;
+  background: #fafbf9;
+  color: #5e685f;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.seeker-enquiry-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.seeker-enquiry-facts {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.seeker-enquiry-facts strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+.seeker-enquiry-facts strong small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+.seeker-enquiry-unavailable {
+  color: var(--muted);
+  font-size: 11px;
+}
+@media (max-width: 850px) {
+  .dashboard-metrics {
+    gap: 10px;
+  }
+  .dashboard-metric {
+    padding: 15px;
+  }
+  .owner-enquiry-status {
+    flex-basis: 135px;
+  }
+}
+@media (max-width: 650px) {
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin-bottom: 25px;
+  }
+  .dashboard-metric {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 3px 12px;
+    padding: 13px 15px;
+  }
+  .dashboard-metric-label {
+    grid-column: 1;
+  }
+  .dashboard-metric strong {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin: 0;
+    font-size: 25px;
+  }
+  .dashboard-metric small {
+    grid-column: 1;
+  }
+  .owner-listing-row {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 10px 12px;
+  }
+  .owner-listing-row > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .owner-listing-row > .status,
+  .owner-listing-row > .dashboard-preview-link,
+  .owner-listing-row > .icon-action {
+    margin: 0;
+    justify-self: start;
+  }
+  .owner-listing-row > .status {
+    grid-column: 2;
+  }
+  .owner-enquiry-card {
+    display: block;
+  }
+  .owner-enquiry-status {
+    margin-top: 14px;
+    width: 100%;
+  }
+  .owner-enquiry-heading {
+    align-items: flex-start;
+  }
+  .seeker-enquiry-card {
+    padding: 15px;
+  }
+  .seeker-enquiry-heading {
+    gap: 9px;
+  }
+  .seeker-enquiry-heading h3 {
+    font-size: 15px;
+  }
+  .seeker-enquiry-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .seeker-enquiry-footer > .button {
+    width: 100%;
+  }
+}
