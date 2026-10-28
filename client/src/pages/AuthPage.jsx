@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { authService } from "@/services/authService.js";
 
@@ -22,12 +22,15 @@ function AuthPage({ register = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function submit(event) {
     event.preventDefault();
     if (submitting) return;
 
     const body = Object.fromEntries(new FormData(event.currentTarget));
+    setErrorMessage("");
     setSubmitting(true);
 
     try {
@@ -52,7 +55,7 @@ function AuthPage({ register = false }) {
         state: Object.keys(destinationState).length > 0 ? destinationState : undefined,
       });
     } catch (error) {
-      notify(error.response?.data?.message || "Something went wrong. Please try again.");
+      setErrorMessage(error.response?.data?.message || "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -93,17 +96,35 @@ function AuthPage({ register = false }) {
           Email address
           <input name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
         </label>
-        <label>
-          Password
-          <input
-            name="password"
-            type="password"
-            autoComplete={register ? "new-password" : "current-password"}
-            minLength={8}
-            required
-            placeholder="At least 8 characters"
-          />
-        </label>
+        <div className="auth-password-group">
+          <label htmlFor="auth-password">Password</label>
+          <div className="auth-password-field">
+            <input
+              id="auth-password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete={register ? "new-password" : "current-password"}
+              minLength={8}
+              required
+              placeholder="At least 8 characters"
+            />
+            <button
+              className="auth-password-toggle"
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              onClick={() => setShowPassword((visible) => !visible)}
+            >
+              {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+              <span>{showPassword ? "Hide" : "Show"}</span>
+            </button>
+          </div>
+        </div>
+        {errorMessage && (
+          <p className="auth-error" role="alert">
+            {errorMessage}
+          </p>
+        )}
         <button className="button auth-submit" type="submit" disabled={submitting}>
           {submitting
             ? register ? "Creating account…" : "Signing in…"
