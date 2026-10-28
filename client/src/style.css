@@ -2484,3 +2484,24 @@ em {
     font-size: clamp(26px, 7vw, 30px);
   }
 }
+/* UX Phase 7: clearer saved-home interactions. */
+.heart:disabled {
+  cursor: wait;
+  opacity: .78;
+}
+.heart.is-saving {
+  box-shadow: 0 0 0 3px #286d611a;
+}
+.save-spinner {
+  animation: save-spinner-rotate .8s linear infinite;
+}
+@keyframes save-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .save-spinner {
+    animation: none;
+  }
+}

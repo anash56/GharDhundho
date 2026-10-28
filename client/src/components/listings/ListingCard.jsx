@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart, MapPin } from "lucide-react";
+import { Heart, LoaderCircle, MapPin } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useSaved } from "@/hooks/useSaved.js";
 import { imgFallback } from "@/utils/constants.js";
@@ -15,6 +15,8 @@ function ListingCard({ item, saved = false, onSavedChange }) {
   };
   const { saveListing, removeSavedListing } = useSaved();
   const [isSaved, setIsSaved] = useState(saved);
+  const [saving, setSaving] = useState(false);
+  const saveLock = useRef(false);
 
   useEffect(() => {
     setIsSaved(saved);
@@ -24,6 +26,10 @@ function ListingCard({ item, saved = false, onSavedChange }) {
     event.preventDefault();
     event.stopPropagation();
     if (user?.role !== "seeker") return notify("Sign in as a seeker to save homes");
+    if (saveLock.current) return;
+
+    saveLock.current = true;
+    setSaving(true);
     try {
       if (isSaved) {
         await removeSavedListing(item._id);
@@ -37,7 +43,10 @@ function ListingCard({ item, saved = false, onSavedChange }) {
         notify("Saved to your list");
       }
     } catch (error) {
-      notify(error.response?.data?.message || "Could not save this home");
+      notify(error.response?.data?.message || "Could not update saved homes. Please try again.");
+    } finally {
+      saveLock.current = false;
+      setSaving(false);
     }
   }
 
@@ -58,12 +67,20 @@ function ListingCard({ item, saved = false, onSavedChange }) {
         <span className="type-pill">{item.propertyType}</span>
         <button
           type="button"
-          className={`heart${isSaved ? " is-saved" : ""}`}
-          aria-label={`${isSaved ? "Unsave" : "Save"} ${item.title}`}
+          className={`heart${isSaved ? " is-saved" : ""}${saving ? " is-saving" : ""}`}
+          aria-label={saving
+            ? isSaved ? `Removing ${item.title} from saved homes` : `Saving ${item.title}`
+            : `${isSaved ? "Unsave" : "Save"} ${item.title}`}
           aria-pressed={isSaved}
+          aria-busy={saving}
+          disabled={saving}
           onClick={save}
         >
-          <Heart size={18} fill={isSaved ? "currentColor" : "none"} />
+          {saving ? (
+            <LoaderCircle size={18} className="save-spinner" aria-hidden="true" />
+          ) : (
+            <Heart size={18} fill={isSaved ? "currentColor" : "none"} aria-hidden="true" />
+          )}
         </button>
       </div>
       <Link to={`/listings/${item._id}`} state={detailState} className="card-content">
