@@ -2559,3 +2559,14 @@ em {
     transition: none;
   }
 }
+
+/* UX Phase 9: respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
