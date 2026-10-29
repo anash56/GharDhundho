@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, MapPin, Send, CheckCircle2, Share2 } from "lucide-react";
 import { listingService } from "@/services/listingService.js";
@@ -23,6 +23,7 @@ function Detail() {
       : "/listings";
   const [item, setItem] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
+  const touchStartRef = useRef(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEnquiring, setIsEnquiring] = useState(false);
@@ -119,6 +120,39 @@ function Detail() {
     }
   }
 
+  function handleGalleryTouchStart(event) {
+    if (images.length <= 1 || event.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleGalleryTouchEnd(event) {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+
+    if (!start || images.length <= 1 || event.changedTouches.length !== 1) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const minimumSwipeDistance = 50;
+
+    // Ignore vertical scrolling and small finger movements.
+    if (
+      Math.abs(deltaX) < minimumSwipeDistance ||
+      Math.abs(deltaX) <= Math.abs(deltaY) * 1.2
+    ) {
+      return;
+    }
+
+    moveImage(deltaX < 0 ? 1 : -1);
+  }
   async function enquire(event) {
     event.preventDefault();
     if (isEnquiring) return;
@@ -256,6 +290,8 @@ function Detail() {
           : "Property photo"}
         tabIndex={images.length > 1 ? 0 : undefined}
         onKeyDown={handleGalleryKeyDown}
+        onTouchStart={handleGalleryTouchStart}
+        onTouchEnd={handleGalleryTouchEnd}
       >
         <img
           src={images[imageIndex]?.url || imgFallback}

@@ -2664,3 +2664,7 @@ em {
   outline: 3px solid var(--teal);
   outline-offset: 4px;
 }
+/* UX Phase 13: swipe navigation for property photos. */
+.detail-image {
+  touch-action: pan-y pinch-zoom;
+}
