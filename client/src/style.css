@@ -2715,3 +2715,10 @@ em {
     text-align: left;
   }
 }
+/* UX Phase 18: responsive tablet listing grids. */
+@media (min-width: 651px) and (max-width: 850px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
