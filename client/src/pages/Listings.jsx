@@ -433,10 +433,20 @@ function Listings() {
               )}
             </>
           ) : (
-            <Empty
-              title="No homes found just yet"
-              text="Try another city or remove a filter to see more places."
-            />
+            <div className="search-empty-state">
+              <Empty
+                title="No homes found just yet"
+                text="Try another city or remove a filter to see more places."
+              />
+              {activeFilters.length > 0 && (
+                <div className="search-empty-actions">
+                  <p>Try removing some filters, or start a fresh search.</p>
+                  <button className="button button-small" type="button" onClick={clearAllFilters}>
+                    Clear all filters
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </section>
       </div>

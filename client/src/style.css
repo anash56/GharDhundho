@@ -2617,3 +2617,45 @@ em {
     transition: none;
   }
 }
+/* UX Phase 11: better recovery when no homes match. */
+.search-empty-state {
+  margin: 12px 0;
+  border: 1px dashed #dcded5;
+  border-radius: 10px;
+  background: #fffefa;
+  overflow: hidden;
+}
+.search-empty-state .empty {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 36px 20px 18px;
+}
+.search-empty-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0 20px 28px;
+}
+.search-empty-actions p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+@media (max-width: 650px) {
+  .search-empty-state .empty {
+    padding: 28px 16px 16px;
+  }
+  .search-empty-actions {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 0 16px 22px;
+  }
+  .search-empty-actions .button {
+    width: 100%;
+  }
+}
