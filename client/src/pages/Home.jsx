@@ -25,23 +25,25 @@ function Home() {
               Find a room, flat or PG that feels like yours.
               <br className="desktop" /> Direct from owners, made for your next chapter.
             </p>
-            <div className="search-box">
+            <form
+              className="search-box"
+              onSubmit={(event) => {
+                event.preventDefault();
+                navigate(
+                  `/listings?city=${encodeURIComponent(city)}&propertyType=${typ}`,
+                );
+              }}
+            >
               <div className="search-city">
-                <MapPin size={19} />
+                <MapPin size={19} aria-hidden="true" />
                 <input
                   aria-label="City or locality"
                   placeholder="Which city are you moving to?"
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" &&
-                    navigate(
-                      `/listings?city=${encodeURIComponent(city)}&propertyType=${typ}`,
-                    )
-                  }
+                  onChange={(event) => setCity(event.target.value)}
                 />
               </div>
-              <select aria-label="Property type" value={typ} onChange={(e) => setTyp(e.target.value)}>
+              <select aria-label="Property type" value={typ} onChange={(event) => setTyp(event.target.value)}>
                 <option value="">Any type</option>
                 {propertyTypes.map((type) => (
                   <option value={type} key={type}>
@@ -49,17 +51,10 @@ function Home() {
                   </option>
                 ))}
               </select>
-              <button
-                className="button"
-                onClick={() =>
-                  navigate(
-                    `/listings?city=${encodeURIComponent(city)}&propertyType=${typ}`,
-                  )
-                }
-              >
-                <Search size={18} /> Find a home
+              <button className="button" type="submit">
+                <Search size={18} aria-hidden="true" /> Find a home
               </button>
-            </div>
+            </form>
             <div className="popular">
               Popular:{" "}
               {popularCities.map((c) => (
