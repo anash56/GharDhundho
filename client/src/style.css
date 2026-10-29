@@ -2659,3 +2659,8 @@ em {
     width: 100%;
   }
 }
+/* UX Phase 12: scoped keyboard controls for the photo gallery. */
+.detail-image[tabindex="0"]:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 4px;
+}

@@ -99,26 +99,25 @@ function Detail() {
     };
   }, [id, user]);
 
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (
-        event.target.matches(
-          "input, textarea, select, [contenteditable='true']",
-        )
-      ) {
-        return;
-      }
-
-      if (event.key === "ArrowRight") moveImage(1);
-      if (event.key === "ArrowLeft") moveImage(-1);
+  function handleGalleryKeyDown(event) {
+    if (
+      images.length <= 1 ||
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey
+    ) {
+      return;
     }
 
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [moveImage]);
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveImage(1);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveImage(-1);
+    }
+  }
 
   async function enquire(event) {
     event.preventDefault();
@@ -249,7 +248,15 @@ function Detail() {
           Share home
         </button>
       </div>
-      <div className="detail-image">
+      <div
+        className="detail-image"
+        role="group"
+        aria-label={images.length > 1
+          ? "Property photo gallery. Use the left and right arrow keys to change images."
+          : "Property photo"}
+        tabIndex={images.length > 1 ? 0 : undefined}
+        onKeyDown={handleGalleryKeyDown}
+      >
         <img
           src={images[imageIndex]?.url || imgFallback}
           alt={item.title}
