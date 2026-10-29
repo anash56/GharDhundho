@@ -2722,3 +2722,7 @@ em {
     gap: 16px;
   }
 }
+/* UX Phase 19: keep paginated results clear of the sticky header when scrolling. */
+.results {
+  scroll-margin-top: 92px;
+}

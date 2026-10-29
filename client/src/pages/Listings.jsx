@@ -40,6 +40,8 @@ function Listings() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [savedIds, setSavedIds] = useState(() => new Set());
   const latestRequest = useRef(0);
+  // UX Phase 19: keep paginated results in view after changing pages.
+  const resultsTopRef = useRef(null);
   const { user } = useAuth();
   const queryString = params.toString();
   const urlSearch = params.get("search") || params.get("city") || "";
@@ -141,6 +143,16 @@ function Listings() {
     else next.delete(key);
     next.delete("page");
     setParams(next);
+  }
+
+  function goToPage(page) {
+    const prefersReducedMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    resultsTopRef.current?.scrollIntoView?.({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+    set("page", String(page));
   }
 
   function applyBudget() {
@@ -369,7 +381,7 @@ function Listings() {
           </aside>
         </div>
 
-        <section className="results" aria-label="Home search results" aria-busy={busy}>
+        <section ref={resultsTopRef} className="results" aria-label="Home search results" aria-busy={busy}>
           <div className="results-head">
             <span aria-live="polite">
               {busy ? "Finding homes…" : `${data.total} ${data.total === 1 ? "home" : "homes"} you might love`}
@@ -417,7 +429,7 @@ function Listings() {
                   <button
                     type="button"
                     disabled={currentPage <= 1 || busy}
-                    onClick={() => set("page", String(currentPage - 1))}
+                    onClick={() => goToPage(currentPage - 1)}
                   >
                     ← Previous
                   </button>
@@ -425,7 +437,7 @@ function Listings() {
                   <button
                     type="button"
                     disabled={currentPage >= data.pages || busy}
-                    onClick={() => set("page", String(currentPage + 1))}
+                    onClick={() => goToPage(currentPage + 1)}
                   >
                     Next →
                   </button>
