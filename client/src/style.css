@@ -2668,3 +2668,50 @@ em {
 .detail-image {
   touch-action: pan-y pinch-zoom;
 }
+
+/* UX Phase 17: keep listing cards readable with long home details. */
+.listing-card,
+.card-content {
+  min-width: 0;
+}
+.card-content {
+  display: block;
+}
+.location {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.location svg {
+  flex: 0 0 auto;
+}
+.card-content h3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  min-height: 2.8em;
+}
+.card-bottom {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.card-bottom > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.card-bottom > span:last-child {
+  margin-left: auto;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 380px) {
+  .card-bottom {
+    align-items: flex-start;
+  }
+  .card-bottom > span:last-child {
+    margin-left: 0;
+    text-align: left;
+  }
+}
