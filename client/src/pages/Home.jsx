@@ -4,6 +4,18 @@ import { ArrowRight, Heart, MapPin, Search } from "lucide-react";
 import Step from "@/components/common/Step.jsx";
 import ListingShelf from "@/components/listings/ListingShelf.jsx";
 import { imgFallback, popularCities, propertyTypes } from "@/utils/constants.js";
+// UX Phase 15: normalize homepage search URLs and omit empty filters.
+function buildSearchUrl(cityValue, propertyTypeValue = "") {
+  const params = new URLSearchParams();
+  const normalizedCity = cityValue.trim();
+
+  if (normalizedCity) params.set("city", normalizedCity);
+  if (propertyTypeValue) params.set("propertyType", propertyTypeValue);
+
+  const query = params.toString();
+  return query ? `/listings?${query}` : "/listings";
+}
+
 function Home() {
   const [city, setCity] = useState("");
   const [typ, setTyp] = useState("");
@@ -29,9 +41,7 @@ function Home() {
               className="search-box"
               onSubmit={(event) => {
                 event.preventDefault();
-                navigate(
-                  `/listings?city=${encodeURIComponent(city)}&propertyType=${typ}`,
-                );
+                navigate(buildSearchUrl(city, typ));
               }}
             >
               <div className="search-city">
@@ -61,7 +71,7 @@ function Home() {
                 <button
                   onClick={() => {
                     setCity(c);
-                    navigate(`/listings?city=${c}`);
+                    navigate(buildSearchUrl(c));
                   }}
                   key={c}
                 >
