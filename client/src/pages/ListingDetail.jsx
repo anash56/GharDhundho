@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Heart, MapPin, Send, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Heart, MapPin, Send, CheckCircle2, Share2 } from "lucide-react";
 import { listingService } from "@/services/listingService.js";
 import { enquiryService } from "@/services/enquiryService.js";
 import { savedService } from "@/services/savedService.js";
@@ -194,6 +194,32 @@ function Detail() {
     }
   }
 
+  async function shareHome() {
+    const shareData = {
+      title: item.title,
+      text: `${item.title} â€” ${item.locality}, ${item.city}. â‚¹${Number(item.rent).toLocaleString("en-IN")}/month`,
+      url: window.location.href,
+    };
+
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard API is not available.");
+      }
+      await navigator.clipboard.writeText(shareData.url);
+      notify("Home link copied. Share it with someone looking for a place.");
+    } catch {
+      notify("Couldn't copy the link. You can share this page's URL from your browser.");
+    }
+  }
   if (item === null) {
     return (
       <div className="wrap page">
@@ -213,10 +239,16 @@ function Detail() {
 
   return (
     <main className="wrap page detail-page">
-      <Link to={backToHomes} className="detail-back">
-        <ArrowLeft size={16} aria-hidden="true" />
-        Back to homes
-      </Link>
+      <div className="detail-top-actions">
+        <Link to={backToHomes} className="detail-back">
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to homes
+        </Link>
+        <button type="button" className="detail-share" onClick={shareHome}>
+          <Share2 size={16} aria-hidden="true" />
+          Share home
+        </button>
+      </div>
       <div className="detail-image">
         <img
           src={images[imageIndex]?.url || imgFallback}

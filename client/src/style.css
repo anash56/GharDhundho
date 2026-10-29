@@ -2570,3 +2570,50 @@ em {
     transition: none !important;
   }
 }
+/* UX Phase 10: share a home listing easily. */
+.detail-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.detail-top-actions .detail-back {
+  margin: 0;
+}
+.detail-share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.detail-share:hover {
+  background: #f2f7f4;
+  border-color: #cddfd5;
+}
+@media (max-width: 480px) {
+  .detail-top-actions {
+    gap: 8px;
+  }
+  .detail-top-actions .detail-back,
+  .detail-share {
+    padding: 8px 10px;
+  }
+  .detail-share {
+    margin-left: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .detail-share {
+    transition: none;
+  }
+}
