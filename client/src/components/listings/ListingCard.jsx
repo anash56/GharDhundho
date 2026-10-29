@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Heart, LoaderCircle, MapPin } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useSaved } from "@/hooks/useSaved.js";
@@ -8,6 +8,7 @@ import { imgFallback } from "@/utils/constants.js";
 function ListingCard({ item, saved = false, onSavedChange }) {
   const { user, notify } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const detailState = {
     from: location.pathname === "/listings"
       ? `${location.pathname}${location.search}`
@@ -25,7 +26,14 @@ function ListingCard({ item, saved = false, onSavedChange }) {
   async function save(event) {
     event.preventDefault();
     event.stopPropagation();
-    if (user?.role !== "seeker") return notify("Sign in as a seeker to save homes");
+    // UX Phase 16: keep guests on their current browse context after login.
+    if (!user) {
+      navigate("/login", {
+        state: { from: `${location.pathname}${location.search}` || "/" },
+      });
+      return;
+    }
+    if (user.role !== "seeker") return notify("Only seeker accounts can save homes");
     if (saveLock.current) return;
 
     saveLock.current = true;
