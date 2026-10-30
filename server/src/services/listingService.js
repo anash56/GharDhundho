@@ -66,10 +66,10 @@ function normalizeBoolean(value) {
   return value === true || value === "true";
 }
 
-/** Search available listings; phone is included only for authenticated requests. */
-export async function findListings(query, { includeOwnerPhone = false } = {}) {
+/** Search available listings without exposing owner phone numbers. */
+export async function findListings(query) {
   const { filter, sortOrder, currentPage, pageSize } = buildListingQuery(query);
-  const ownerFields = includeOwnerPhone ? "name isVerified phone" : "name isVerified";
+  const ownerFields = "name isVerified";
   const [items, total] = await Promise.all([
     Listing.find(filter)
       .populate("owner", ownerFields)
@@ -81,8 +81,8 @@ export async function findListings(query, { includeOwnerPhone = false } = {}) {
   return { items, total, page: currentPage, pages: Math.ceil(total / pageSize) };
 }
 
-export async function findListingById(id, { includeOwnerPhone = false } = {}) {
-  const ownerFields = includeOwnerPhone ? "name phone isVerified" : "name isVerified";
+export async function findListingById(id) {
+  const ownerFields = "name isVerified";
   const listing = await Listing.findById(id).populate("owner", ownerFields);
   if (!listing) throw new ApiError(404, "Listing not found");
   return listing;

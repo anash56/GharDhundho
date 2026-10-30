@@ -5,7 +5,7 @@ export async function list(req, res) {
   res.json(
     apiResponse(
       "Listings",
-      await service.findListings(req.query, { includeOwnerPhone: Boolean(req.user) }),
+      await service.findListings(req.query),
     ),
   );
 }
@@ -29,9 +29,7 @@ export async function detail(req, res) {
   res.json(
     apiResponse(
       "Listing details",
-      await service.findListingById(req.params.id, {
-        includeOwnerPhone: Boolean(req.user),
-      }),
+      await service.findListingById(req.params.id),
     ),
   );
 }
