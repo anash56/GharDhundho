@@ -485,7 +485,7 @@ function Detail() {
               )}
               <button type="submit" className="button" disabled={isEnquiring}>
                 <Send size={16} aria-hidden="true" />
-                {isEnquiring ? "Sending enquiry... : "Send enquiry"}
+                {isEnquiring ? "Sending enquiry..." : "Send enquiry"}
               </button>
             </form>
           )}
