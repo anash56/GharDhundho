@@ -485,13 +485,13 @@ function Detail() {
               )}
               <button type="submit" className="button" disabled={isEnquiring}>
                 <Send size={16} aria-hidden="true" />
-                {isEnquiring ? "Sending enquiryâ€¦" : "Send enquiry"}
+                {isEnquiring ? "Sending enquiry... : "Send enquiry"}
               </button>
             </form>
           )}
 
           <small className="privacy-note">
-            Your message goes directly to the owner.
+            Your message will appear in the property owner's dashboard.
           </small>
         </aside>
       </div>

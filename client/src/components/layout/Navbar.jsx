@@ -15,6 +15,7 @@ function Header() {
   const nav = useNavigate();
   const location = useLocation();
   const menuToggleRef = useRef(null);
+  const displayName = user?.name?.trim().split(/\s+/)[0] || "Account";
 
   // Keep the mobile menu from staying open after navigation.
   useEffect(() => {
@@ -96,8 +97,11 @@ function Header() {
               >
                 Dashboard
               </NavLink>
-              <span className="hello">Hi, {user.name.split(" ")[0]}</span>
-              <button className="text-button" type="button" disabled={loggingOut} onClick={requestLogout}>
+              <div className="nav-account">
+                <span className="nav-account-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</span>
+                <span className="nav-account-name">{displayName}</span>
+              </div>
+              <button className="text-button nav-signout" type="button" disabled={loggingOut} onClick={requestLogout}>
                 <LogOut size={16} /> {loggingOut ? "Signing out…" : "Sign out"}
               </button>
             </>

@@ -2770,3 +2770,63 @@ em {
   .admin-pagination > div { width: 100%; justify-content: space-between; }
   .admin-filter-tabs button { padding: 8px 11px; font-size: 0.88rem; }
 }
+/* UX Phase 23: polished signed-in account identity and sign-out action. */
+.nav-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--ink);
+}
+.nav-account-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 33px;
+  width: 33px;
+  height: 33px;
+  border: 1px solid #d9e5df;
+  border-radius: 50%;
+  background: #eaf3ee;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 800;
+}
+.nav-account-name {
+  max-width: 130px;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-signout {
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+.nav-signout:hover {
+  border-color: #d4e2d9;
+  background: #f5f8f5;
+  color: var(--teal);
+}
+.nav-signout:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+@media (max-width: 650px) {
+  .nav-account,
+  .nav-signout {
+    align-self: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-signout {
+    transition: none;
+  }
+}
