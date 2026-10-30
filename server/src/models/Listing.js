@@ -24,6 +24,11 @@ const schema = new Schema(
     amenities: [String],
     images: [{ url: String, publicId: String }],
     isAvailable: { type: Boolean, default: true },
+    // Admin moderation is separate from the owner's availability setting.
+    isHiddenByAdmin: { type: Boolean, default: false, index: true },
+    adminModerationNote: { type: String, trim: true, maxlength: 500, default: "" },
+    adminModeratedAt: { type: Date, default: null },
+    adminModeratedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true },
 );

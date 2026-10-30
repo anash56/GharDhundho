@@ -231,6 +231,12 @@ export default function OwnerDashboard() {
               <span className={item.isAvailable ? "status" : "status off"}>
                 {item.isAvailable ? "Available" : "Unavailable"}
               </span>
+              {item.isHiddenByAdmin && (
+                <div className="admin-hidden-owner-note">
+                  <span className="enquiry-status-pill status-closed">Hidden by admin</span>
+                  {item.adminModerationNote && <small>Reason: {item.adminModerationNote}</small>}
+                </div>
+              )}
               <button
                 className="icon-action"
                 aria-label={`Edit listing: ${item.title}`}

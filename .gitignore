@@ -9,3 +9,4 @@ coverage
 /server/test/
 /client/src/__tests__/
 /client/src/test/
+/server/seed

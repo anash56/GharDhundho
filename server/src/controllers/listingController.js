@@ -29,7 +29,7 @@ export async function detail(req, res) {
   res.json(
     apiResponse(
       "Listing details",
-      await service.findListingById(req.params.id),
+      await service.findListingById(req.params.id, req.user),
     ),
   );
 }

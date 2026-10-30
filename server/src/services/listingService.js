@@ -69,6 +69,8 @@ function normalizeBoolean(value) {
 /** Search available listings without exposing owner phone numbers. */
 export async function findListings(query) {
   const { filter, sortOrder, currentPage, pageSize } = buildListingQuery(query);
+  // Admin-hidden listings stay out of public search, including legacy records without this field.
+  filter.isHiddenByAdmin = { $ne: true };
   const ownerFields = "name isVerified";
   const [items, total] = await Promise.all([
     Listing.find(filter)
@@ -81,10 +83,15 @@ export async function findListings(query) {
   return { items, total, page: currentPage, pages: Math.ceil(total / pageSize) };
 }
 
-export async function findListingById(id) {
+export async function findListingById(id, viewer) {
   const ownerFields = "name isVerified";
   const listing = await Listing.findById(id).populate("owner", ownerFields);
   if (!listing) throw new ApiError(404, "Listing not found");
+
+  const isOwner = String(listing.owner?._id ?? listing.owner) === String(viewer?.id || "");
+  if (listing.isHiddenByAdmin && viewer?.role !== "admin" && !isOwner) {
+    throw new ApiError(404, "Listing not found");
+  }
   return listing;
 }
 

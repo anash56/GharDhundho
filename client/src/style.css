@@ -2726,3 +2726,47 @@ em {
 .results {
   scroll-margin-top: 92px;
 }
+
+/* PHASE 22 ADMIN MODERATION */
+.admin-dashboard-heading .eyebrow { display: inline-flex; align-items: center; gap: 7px; }
+.admin-review-section { margin-top: 42px; }
+.admin-review-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 22px; }
+.admin-review-heading h2 { margin: 7px 0 6px; font: 800 clamp(1.5rem, 3vw, 2rem) Manrope, sans-serif; letter-spacing: -0.7px; }
+.admin-review-heading p { margin: 0; color: var(--muted); line-height: 1.55; }
+.admin-search-label input { width: min(340px, 34vw); min-height: 44px; border: 1px solid var(--line); border-radius: 12px; padding: 0 13px; background: white; color: var(--ink); }
+.admin-listing-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.admin-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-filter-tabs button { border: 1px solid var(--line); border-radius: 999px; padding: 9px 15px; background: white; color: var(--ink); }
+.admin-filter-tabs button.admin-filter-active { border-color: var(--teal); background: var(--teal); color: white; }
+.admin-listing-list { display: grid; gap: 13px; }
+.admin-listing-card { display: grid; grid-template-columns: 116px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 15px; border: 1px solid var(--line); border-radius: 17px; background: white; }
+.admin-listing-card > img { width: 116px; height: 104px; object-fit: cover; border-radius: 12px; background: #f3f2ed; }
+.admin-listing-info { min-width: 0; display: grid; gap: 5px; }
+.admin-listing-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.admin-listing-title-row h3 { margin: 0; font-size: 1rem; }
+.admin-listing-info p, .admin-listing-info small { margin: 0; color: var(--muted); line-height: 1.45; overflow-wrap: anywhere; }
+.admin-listing-info p { color: var(--ink); }
+.admin-moderation-note { color: #a33b2a !important; }
+.admin-listing-actions { display: flex; justify-content: flex-end; }
+.admin-listing-actions .button, .admin-listing-actions .icon-action { white-space: nowrap; }
+.admin-empty-state { display: grid; justify-items: center; gap: 8px; padding: 40px 18px; border: 1px dashed var(--line); border-radius: 17px; color: var(--muted); text-align: center; }
+.admin-empty-state h3, .admin-empty-state p { margin: 0; }
+.admin-empty-state h3 { color: var(--ink); }
+.admin-pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; color: var(--muted); }
+.admin-pagination > div { display: flex; gap: 8px; }
+.admin-pagination button { display: inline-flex; align-items: center; gap: 5px; }
+.admin-hidden-owner-note { display: grid; justify-items: start; gap: 5px; }
+.admin-hidden-owner-note small { color: #a33b2a; white-space: normal; }
+@media (max-width: 760px) {
+  .admin-review-heading { align-items: stretch; flex-direction: column; }
+  .admin-search-label input { width: 100%; }
+  .admin-listing-card { grid-template-columns: 88px minmax(0, 1fr); gap: 12px; }
+  .admin-listing-card > img { width: 88px; height: 88px; }
+  .admin-listing-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .admin-listing-actions button { min-height: 40px; }
+}
+@media (max-width: 480px) {
+  .admin-listing-toolbar, .admin-pagination { align-items: flex-start; flex-direction: column; }
+  .admin-pagination > div { width: 100%; justify-content: space-between; }
+  .admin-filter-tabs button { padding: 8px 11px; font-size: 0.88rem; }
+}

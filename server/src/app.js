@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import listingRoutes from "./routes/listings.js";
 import enquiryRoutes from "./routes/enquiries.js";
 import savedRoutes from "./routes/saved.js";
+import adminRoutes from "./routes/admin.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFound } from "./middleware/notFound.js";
 import { sanitizeMongoInput } from "./middleware/sanitizeMongoInput.js";
@@ -36,6 +37,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/enquiries", enquiryRoutes);
 app.use("/api/saved", savedRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
