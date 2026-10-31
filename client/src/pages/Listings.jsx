@@ -37,11 +37,11 @@ function Listings() {
   const [minRentDraft, setMinRentDraft] = useState(() => params.get("minRent") || "");
   const [maxRentDraft, setMaxRentDraft] = useState(() => params.get("maxRent") || "");
   const [budgetError, setBudgetError] = useState("");
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [savedIds, setSavedIds] = useState(() => new Set());
   const latestRequest = useRef(0);
   // UX Phase 19: keep paginated results in view after changing pages.
   const resultsTopRef = useRef(null);
+  const budgetFilterRef = useRef(null);
   const { user } = useAuth();
   const queryString = params.toString();
   const urlSearch = params.get("search") || params.get("city") || "";
@@ -179,6 +179,7 @@ function Listings() {
     next.delete("page");
     setBudgetError("");
     setParams(next);
+    if (budgetFilterRef.current) budgetFilterRef.current.open = false;
   }
 
   function clearAllFilters() {
@@ -186,7 +187,6 @@ function Listings() {
     setMinRentDraft("");
     setMaxRentDraft("");
     setBudgetError("");
-    setMobileFiltersOpen(false);
     setParams({});
   }
 
@@ -289,98 +289,148 @@ function Listings() {
       )}
 
       <div className="browse-layout">
-        <div className="filters-column">
-          <button
-            className="filters-toggle"
-            type="button"
-            aria-expanded={mobileFiltersOpen}
-            aria-controls="listing-filter-panel"
-            onClick={() => setMobileFiltersOpen((open) => !open)}
+        <div className="filters-toolbar" aria-label="Filter homes">
+          <details
+            className="quick-filter"
+            onClick={(event) => {
+              if (event.target.closest(".check")) event.currentTarget.open = false;
+            }}
           >
-            <SlidersHorizontal size={17} aria-hidden="true" />
-            {mobileFiltersOpen ? "Hide filters" : "Filters"}
-            {activeFilters.length > 0 && (
-              <span className="filter-count">{activeFilters.length} active</span>
-            )}
-            <ChevronDown className={mobileFiltersOpen ? "filters-chevron is-open" : "filters-chevron"} size={17} aria-hidden="true" />
-          </button>
-
-          <aside
-            id="listing-filter-panel"
-            className={`filters${mobileFiltersOpen ? " filters-open" : ""}`}
-            aria-label="Filter homes"
-          >
-            <div className="filter-title">
-              <SlidersHorizontal size={18} aria-hidden="true" /> Fine-tune
-              <button type="button" onClick={clearAllFilters}>Reset</button>
+            <summary>
+              <span className="quick-filter-copy">
+                <span className="quick-filter-name">Home type</span>
+                <strong>{formatOption(val("propertyType")) || "Any"}</strong>
+              </span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </summary>
+            <div className="quick-filter-menu">
+              <Filter
+                label="HOME TYPE"
+                name="propertyType"
+                value={val("propertyType")}
+                change={set}
+                opts={propertyTypes}
+              />
             </div>
-            <Filter
-              label="HOME TYPE"
-              name="propertyType"
-              value={val("propertyType")}
-              change={set}
-              opts={propertyTypes}
-            />
-            <Filter
-              label="WHO IT'S FOR"
-              name="availableFor"
-              value={val("availableFor")}
-              change={set}
-              opts={availableForOptions}
-            />
-            <Filter
-              label="FURNISHING"
-              name="furnishing"
-              value={val("furnishing")}
-              change={set}
-              opts={furnishingOptions}
-            />
-            <div className="filter-block budget-filter">
-              <b>MONTHLY BUDGET</b>
-              <div className="rent-inputs">
-                <label>
-                  <span>Min rent (₹)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={MAX_RENT_FILTER}
-                    step="0.01"
-                    inputMode="decimal"
-                    aria-label="Minimum monthly rent in rupees"
-                    placeholder="Min ₹"
-                    value={minRentDraft}
-                    onChange={(event) => {
-                      setMinRentDraft(event.target.value);
-                      setBudgetError("");
-                    }}
-                  />
-                </label>
-                <label>
-                  <span>Max rent (₹)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={MAX_RENT_FILTER}
-                    step="0.01"
-                    inputMode="decimal"
-                    aria-label="Maximum monthly rent in rupees"
-                    placeholder="Max ₹"
-                    value={maxRentDraft}
-                    onChange={(event) => {
-                      setMaxRentDraft(event.target.value);
-                      setBudgetError("");
-                    }}
-                  />
-                </label>
+          </details>
+
+          <details
+            className="quick-filter"
+            onClick={(event) => {
+              if (event.target.closest(".check")) event.currentTarget.open = false;
+            }}
+          >
+            <summary>
+              <span className="quick-filter-copy">
+                <span className="quick-filter-name">Who it's for</span>
+                <strong>{formatOption(val("availableFor")) || "Anyone"}</strong>
+              </span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </summary>
+            <div className="quick-filter-menu">
+              <Filter
+                label="WHO IT'S FOR"
+                name="availableFor"
+                value={val("availableFor")}
+                change={set}
+                opts={availableForOptions}
+              />
+            </div>
+          </details>
+
+          <details
+            className="quick-filter"
+            onClick={(event) => {
+              if (event.target.closest(".check")) event.currentTarget.open = false;
+            }}
+          >
+            <summary>
+              <span className="quick-filter-copy">
+                <span className="quick-filter-name">Furnishing</span>
+                <strong>{formatOption(val("furnishing")) || "Any"}</strong>
+              </span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </summary>
+            <div className="quick-filter-menu">
+              <Filter
+                label="FURNISHING"
+                name="furnishing"
+                value={val("furnishing")}
+                change={set}
+                opts={furnishingOptions}
+              />
+            </div>
+          </details>
+
+          <details ref={budgetFilterRef} className="quick-filter quick-filter-budget">
+            <summary>
+              <span className="quick-filter-copy">
+                <span className="quick-filter-name">Monthly budget</span>
+                <strong>
+                  {urlMinRent || urlMaxRent
+                    ? urlMinRent && urlMaxRent
+                      ? `${formatRent(urlMinRent)} - ${formatRent(urlMaxRent)}`
+                      : urlMinRent
+                        ? `From ${formatRent(urlMinRent)}`
+                        : `Up to ${formatRent(urlMaxRent)}`
+                    : "Any budget"}
+                </strong>
+              </span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </summary>
+            <div className="quick-filter-menu quick-filter-budget-menu">
+              <div className="filter-block budget-filter">
+                <b>MONTHLY BUDGET</b>
+                <div className="rent-inputs">
+                  <label>
+                    <span>Min rent (INR)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max={MAX_RENT_FILTER}
+                      step="0.01"
+                      inputMode="decimal"
+                      aria-label="Minimum monthly rent in rupees"
+                      placeholder="Min INR"
+                      value={minRentDraft}
+                      onChange={(event) => {
+                        setMinRentDraft(event.target.value);
+                        setBudgetError("");
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span>Max rent (INR)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max={MAX_RENT_FILTER}
+                      step="0.01"
+                      inputMode="decimal"
+                      aria-label="Maximum monthly rent in rupees"
+                      placeholder="Max INR"
+                      value={maxRentDraft}
+                      onChange={(event) => {
+                        setMaxRentDraft(event.target.value);
+                        setBudgetError("");
+                      }}
+                    />
+                  </label>
+                </div>
+                {budgetError && <p className="budget-error" role="alert">{budgetError}</p>}
+                <button className="button button-small budget-apply" type="button" onClick={applyBudget}>
+                  Apply budget
+                </button>
               </div>
-              {budgetError && <p className="budget-error" role="alert">{budgetError}</p>}
-              <button className="button button-small budget-apply" type="button" onClick={applyBudget}>
-                Apply budget
-              </button>
             </div>
-          </aside>
-        </div>
+          </details>
 
+          {activeFilters.length > 0 && (
+            <button className="quick-filter-reset" type="button" onClick={clearAllFilters}>
+              Clear all
+            </button>
+          )}
+        </div>
         <section ref={resultsTopRef} className="results" aria-label="Home search results" aria-busy={busy}>
           <div className="results-head">
             <span aria-live="polite">
