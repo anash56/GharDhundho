@@ -230,7 +230,7 @@ function Detail() {
   async function shareHome() {
     const shareData = {
       title: item.title,
-      text: `${item.title} â€” ${item.locality}, ${item.city}. â‚¹${Number(item.rent).toLocaleString("en-IN")}/month`,
+      text: `${item.title} — ${item.locality}, ${item.city}. ₹${Number(item.rent).toLocaleString("en-IN")}/month`,
       url: window.location.href,
     };
 
@@ -370,7 +370,7 @@ function Detail() {
             size={17}
             fill={isSaved ? "currentColor" : "none"}
           />
-          {isSaving ? "Updatingâ€¦" : isSaved ? "Saved" : "Save home"}
+          {isSaving ? "Updating…" : isSaved ? "Saved" : "Save home"}
         </button>
       </div>
 
@@ -407,7 +407,7 @@ function Detail() {
           {item.amenities?.length ? (
             <div className="amenities">
               {item.amenities.map((amenity) => (
-                <span key={amenity}>âœ“ {amenity}</span>
+                <span key={amenity}>✓ {amenity}</span>
               ))}
             </div>
           ) : (

@@ -138,7 +138,7 @@ function Header() {
         title="Sign out?"
         description="Are you sure you want to sign out of GharDhundho? You will need to sign in again to manage your listings and enquiries."
         confirmLabel="Sign out"
-        busyLabel="Signing outâ€¦"
+        busyLabel="Signing out…"
         busy={loggingOut}
         icon={LogOut}
         onCancel={() => setShowLogoutConfirmation(false)}

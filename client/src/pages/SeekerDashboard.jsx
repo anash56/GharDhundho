@@ -65,7 +65,7 @@ export default function SeekerDashboard() {
         <div className="dashboard-async-state" role="status" aria-live="polite">
           <div className="skeleton dashboard-row-skeleton" />
           <div className="skeleton dashboard-row-skeleton" />
-          <p>Loading your saved homes and enquiriesâ€¦</p>
+          <p>Loading your saved homes and enquiries…</p>
         </div>
       ) : loadError ? (
         <div className="dashboard-async-state dashboard-load-error" role="alert">
@@ -131,7 +131,7 @@ export default function SeekerDashboard() {
                   </p>
                 )}
               </div>
-              <span className={`enquiry-status-pill status-${enquiry.status}`}>{enquiry.status}</span>
+              <span className={`enquiry-status-pill status-${enquiry.status}`}>{({ new: "New", contacted: "Contacted", closed: "Closed" })[enquiry.status] || enquiry.status}</span>
             </div>
             <p className="seeker-enquiry-message">{enquiry.message}</p>
             <div className="seeker-enquiry-footer">

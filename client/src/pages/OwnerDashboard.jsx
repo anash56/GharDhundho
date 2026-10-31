@@ -164,7 +164,7 @@ export default function OwnerDashboard() {
         <div className="dashboard-async-state" role="status" aria-live="polite">
           <div className="skeleton dashboard-row-skeleton" />
           <div className="skeleton dashboard-row-skeleton" />
-          <p>Loading your listings and enquiriesâ€¦</p>
+          <p>Loading your listings and enquiries…</p>
         </div>
       ) : loadError ? (
         <div className="dashboard-async-state dashboard-load-error" role="alert">
@@ -278,7 +278,7 @@ export default function OwnerDashboard() {
               <div className="owner-enquiry-main">
                 <div className="owner-enquiry-heading">
                   <b>{enquiry.seeker?.name || "Seeker"}</b>
-                  <span className={`enquiry-status-pill status-${enquiry.status}`}>{enquiry.status}</span>
+                  <span className={`enquiry-status-pill status-${enquiry.status}`}>{({ new: "New", contacted: "Contacted", closed: "Closed" })[enquiry.status] || enquiry.status}</span>
                 </div>
                 <small>
                   about {enquiry.listing?.title || "a listing"}
@@ -300,23 +300,23 @@ export default function OwnerDashboard() {
                 disabled={statusBusyId === enquiry._id}
                 onChange={(event) => updateStatus(enquiry._id, event.target.value)}
               >
-                <option value="new">new</option>
-                <option value="contacted">contacted</option>
-                <option value="closed">closed</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="closed">Closed</option>
                 </select>
               </label>
             </article>
           ))}
         </div>
       ) : (
-        <p className="muted">No messages yet. They’ll appear here when someone reaches out.</p>
+        <p className="muted">No enquiries yet. They’ll appear here when someone contacts you.</p>
       )}
       <ConfirmDialog
         open={Boolean(availabilityTarget)}
         title="Mark this listing unavailable?"
-        description={availabilityTarget ? `â€œ${availabilityTarget.title}â€ will be hidden from public search. You can mark it available again from your dashboard.` : ""}
+        description={availabilityTarget ? `“${availabilityTarget.title}” will be hidden from public search. You can mark it available again from your dashboard.` : ""}
         confirmLabel="Mark unavailable"
-        busyLabel="Updatingâ€¦"
+        busyLabel="Updating…"
         busy={Boolean(availabilityTarget && availabilityBusyId === availabilityTarget._id)}
         icon={EyeOff}
         onCancel={() => setAvailabilityTarget(null)}
