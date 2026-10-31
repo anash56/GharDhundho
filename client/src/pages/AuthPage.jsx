@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Home,
+  KeyRound,
+  Mail,
+  Phone,
+  UserRound,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { authService } from "@/services/authService.js";
 
@@ -15,6 +24,18 @@ function getSafeDestination(value) {
     return value;
   }
   return "/dashboard";
+}
+
+function AuthField({ label, name, icon: Icon, ...inputProps }) {
+  return (
+    <label className="auth-field">
+      <span>{label}</span>
+      <span className="auth-input-wrap">
+        <Icon size={17} aria-hidden="true" />
+        <input name={name} {...inputProps} />
+      </span>
+    </label>
+  );
 }
 
 function AuthPage({ register = false }) {
@@ -62,43 +83,73 @@ function AuthPage({ register = false }) {
   }
 
   return (
-    <main className="auth-wrap">
+    <main className={`auth-wrap ${register ? "auth-wrap--register" : "auth-wrap--login"}`}>
       <form className="auth-card" onSubmit={submit} aria-busy={submitting}>
+        <div className="auth-mark" aria-hidden="true">
+          <Home size={21} strokeWidth={2.2} />
+        </div>
         <span className="eyebrow">
-          {register ? "A NEW CITY, A FRESH START" : "GOOD TO HAVE YOU BACK"}
+          {register ? "FIND YOUR PLACE" : "WELCOME BACK"}
         </span>
-        <h1>{register ? "Let’s get you home." : "Welcome back."}</h1>
-        <p>
-          {register
-            ? "Create your account and find your place."
-            : "Sign in and pick up where you left off."}
+        <h1>{register ? "Let’s get you home." : "Good to see you."}</h1>
+        <p className="auth-intro">
+          {register ? "A better place starts with one step." : "Pick up where you left off."}
         </p>
+
         {register && (
           <>
-            <label>
-              Your name
-              <input name="name" autoComplete="name" required placeholder="Full name" />
-            </label>
-            <label>
-              Phone number
-              <input name="phone" type="tel" autoComplete="tel" required placeholder="Mobile number" />
-            </label>
-            <label>
-              I’m here to
-              <select name="role" defaultValue="seeker" autoComplete="off">
-                <option value="seeker">Find a home</option>
-                <option value="owner">List my property</option>
-              </select>
-            </label>
+            <fieldset className="auth-role-fieldset">
+              <legend>I want to</legend>
+              <div className="auth-role-options">
+                <label className="auth-role-option">
+                  <input type="radio" name="role" value="seeker" defaultChecked />
+                  <Home size={18} aria-hidden="true" />
+                  <span>Find a home</span>
+                  <span className="auth-role-check" aria-hidden="true" />
+                </label>
+                <label className="auth-role-option">
+                  <input type="radio" name="role" value="owner" />
+                  <KeyRound size={18} aria-hidden="true" />
+                  <span>List a property</span>
+                  <span className="auth-role-check" aria-hidden="true" />
+                </label>
+              </div>
+            </fieldset>
+
+            <AuthField
+              label="Full name"
+              name="name"
+              icon={UserRound}
+              autoComplete="name"
+              required
+              placeholder="Your name"
+            />
+            <AuthField
+              label="Phone number"
+              name="phone"
+              icon={Phone}
+              type="tel"
+              autoComplete="tel"
+              required
+              placeholder="Your mobile number"
+            />
           </>
         )}
-        <label>
-          Email address
-          <input name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
-        </label>
+
+        <AuthField
+          label="Email address"
+          name="email"
+          icon={Mail}
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="you@example.com"
+        />
+
         <div className="auth-password-group">
           <label htmlFor="auth-password">Password</label>
-          <div className="auth-password-field">
+          <div className="auth-input-wrap auth-password-field">
+            <KeyRound size={17} aria-hidden="true" />
             <input
               id="auth-password"
               name="password"
@@ -106,7 +157,7 @@ function AuthPage({ register = false }) {
               autoComplete={register ? "new-password" : "current-password"}
               minLength={8}
               required
-              placeholder="At least 8 characters"
+              placeholder={register ? "At least 8 characters" : "Enter your password"}
             />
             <button
               className="auth-password-toggle"
@@ -115,22 +166,27 @@ function AuthPage({ register = false }) {
               aria-pressed={showPassword}
               onClick={() => setShowPassword((visible) => !visible)}
             >
-              {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
-              <span>{showPassword ? "Hide" : "Show"}</span>
+              {showPassword ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
             </button>
           </div>
         </div>
+
         {errorMessage && (
           <p className="auth-error" role="alert">
             {errorMessage}
           </p>
         )}
+
         <button className="button auth-submit" type="submit" disabled={submitting}>
-          {submitting
-            ? register ? "Creating account…" : "Signing in…"
-            : register ? "Create my account" : "Log in"}
+          <span>
+            {submitting
+              ? register ? "Creating account…" : "Signing in…"
+              : register ? "Create account" : "Log in"}
+          </span>
           {!submitting && <ArrowRight size={17} />}
+          {submitting && <span className="auth-submit-spinner" aria-hidden="true" />}
         </button>
+
         <p className="auth-switch">
           {register ? "Already have an account?" : "New around here?"}{" "}
           <Link to={register ? "/login" : "/register"} state={location.state}>
